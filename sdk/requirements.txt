@@ -1,0 +1,2 @@
+# BugRadar Python SDK - no external dependencies required
+# Uses only Python standard library modules

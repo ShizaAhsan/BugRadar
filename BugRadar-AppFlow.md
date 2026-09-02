@@ -1,6 +1,6 @@
 # BugRadar — Application Flow
 
-**Version:** 1.0
+**Version:** 1.0 
 **Related:** BugRadar-PRD.md, BugRadar-TRD.md
 **Last Updated:** August 2026
 

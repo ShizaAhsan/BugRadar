@@ -1326,37 +1326,23 @@
                     <p class="card-desc">Collaborators who have access to triage issues for this project.</p>
                 </div>
 
-                <table class="team-table">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Sarah Jenkins</strong> (You)</td>
-                            <td class="number-font">sarah@company.com</td>
-                            <td><span class="role-badge">Owner</span></td>
-                            <td><span style="color:var(--text-muted); font-size:12px;">Active</span></td>
-                        </tr>
-                        <tr>
-                            <td>Alex Rivera</td>
-                            <td class="number-font">alex.r@company.com</td>
-                            <td><span class="role-badge" style="background:rgba(6,182,212,0.15); color:#22d3ee; border-color:rgba(6,182,212,0.3);">Developer</span></td>
-                            <td><button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="removeMember(this, 'Alex Rivera')">Remove</button></td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div id="team-members-list">
+                    <div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Loading team members...</div>
+                </div>
 
                 <div class="invite-box">
                     <input type="email" id="inviteEmail" class="form-input" placeholder="colleague@company.com">
-                    <button class="btn btn-primary" onclick="sendInvite()" style="white-space:nowrap;">
+                    <button class="btn btn-primary" onclick="inviteMember()" style="white-space:nowrap;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                         Invite Member
                     </button>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <h4 style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">Pending Invitations</h4>
+                    <div id="pending-invitations-list">
+                        <div style="padding:12px;color:var(--text-muted);font-size:12px">No pending invitations</div>
+                    </div>
                 </div>
             </div>
 
@@ -1688,5 +1674,6 @@
         </div>
     </div>
 
+    <script src="app.js"></script>
 </body>
 </html>

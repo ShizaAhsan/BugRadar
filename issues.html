@@ -1263,6 +1263,47 @@
         .tag-python  { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; }
         .tag-go      { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
         .tag-auth    { background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.35); color: #f472b6; }
+
+        /* Dynamic row styles (rendered by app.js) */
+        .issue-title { font-weight: 600; color: var(--error-red); font-family: var(--font-mono); display: block; margin-bottom: 4px; }
+        .issue-loc { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); }
+        .pill-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-pill);
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pill-btn:hover { border-color: var(--accent-blue); color: var(--text-main); }
+        .time-filters, #statusFilterPills {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .table-pill-btn {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-pill);
+            padding: 5px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .table-pill-btn.active {
+            background: rgba(59,130,246,0.15);
+            border-color: rgba(59,130,246,0.4);
+            color: var(--accent-blue);
+        }
+        .table-pill-btn:hover:not(.active) {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
     </style>
 </head>
 <body>
@@ -1958,5 +1999,6 @@
         }
     </script>
 
+    <script src="app.js"></script>
 </body>
 </html>

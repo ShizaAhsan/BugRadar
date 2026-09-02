@@ -193,35 +193,6 @@
 
     <!-- External Global Master JS File -->
     <script src="script.js"></script>
-    <script>
-        /* Page-specific: Sign Up form submission handler */
-        function handleSignUpSubmit(event) {
-            event.preventDefault();
-            const fullname  = document.getElementById('fullname').value;
-            const email     = document.getElementById('email').value;
-            const orgname   = document.getElementById('orgname').value;
-            const password  = document.getElementById('password').value;
-            const terms     = document.getElementById('terms').checked;
-            const submitBtn = document.getElementById('signup-btn');
-
-            if (!fullname || !email || !orgname || !password || !terms) {
-                alert('Please complete all fields and accept the terms.');
-                return;
-            }
-
-            submitBtn.innerHTML = '<span>Creating Account...</span>';
-            submitBtn.style.opacity = '0.85';
-
-            setTimeout(() => {
-                submitBtn.innerHTML = '<span>✓ Account Created!</span>';
-                submitBtn.style.backgroundColor = 'var(--color-success)';
-
-                setTimeout(() => {
-                    alert(`Welcome to BugRadar, ${fullname}! Setting up your workspace...`);
-                    window.location.href = 'onboarding.html';
-                }, 700);
-            }, 1000);
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>

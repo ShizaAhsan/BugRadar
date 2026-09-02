@@ -1329,17 +1329,17 @@
         <div class="page-header">
             <div class="header-left">
                 <span class="tag">React</span>
-                <span class="status-badge unresolved">Unresolved</span>
-                <h1>TypeError: Cannot read properties of undefined <span class="sub">(reading 'map')</span></h1>
-                <div class="error-subtitle">src/components/Dashboard.tsx:84</div>
+                <span class="status-badge unresolved" id="issue-status-badge">Unresolved</span>
+                <h1 id="issue-title">Loading issue...</h1>
+                <div class="error-subtitle" id="issue-culprit">-</div>
             </div>
             
             <div class="header-actions">
-                <button class="btn btn-resolve" onclick="alert('Issue marked as resolved!')">
+                <button class="btn btn-resolve" onclick="updateIssueStatus('resolved')">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     Resolve
                 </button>
-                <button class="btn btn-ignore" onclick="alert('Issue ignored.')">
+                <button class="btn btn-ignore" onclick="updateIssueStatus('ignored')">
                     Ignore
                 </button>
             </div>
@@ -1349,41 +1349,32 @@
         <div class="metadata-grid">
             <div class="meta-card">
                 <div class="meta-label">Events</div>
-                <div class="meta-value number-font">1,204</div>
+                <div class="meta-value number-font" id="issue-event-count">-</div>
                 <div class="meta-subtext">Total crashes recorded</div>
             </div>
             <div class="meta-card">
                 <div class="meta-label">Users Affected</div>
-                <div class="meta-value number-font">342</div>
+                <div class="meta-value number-font" id="issue-users">-</div>
                 <div class="meta-subtext">Unique client devices</div>
             </div>
             <div class="meta-card">
                 <div class="meta-label">Last Seen</div>
-                <div class="meta-value number-font">2m ago</div>
+                <div class="meta-value number-font" id="issue-last-seen">-</div>
                 <div class="meta-subtext">Active session tracking</div>
             </div>
             <div class="meta-card">
                 <div class="meta-label">First Seen</div>
-                <div class="meta-value number-font">3d ago</div>
+                <div class="meta-value number-font" id="issue-first-seen">-</div>
                 <div class="meta-subtext">Release v1.4.2</div>
             </div>
         </div>
-
         <!-- Content Card: Stack Trace -->
         <div class="content-card">
             <div class="card-header">
                 <h3 class="card-title">Stack Trace</h3>
             </div>
-            
-            <div class="stack-trace-container">
-                <div class="stack-header">
-                    <span>src/components/Dashboard.tsx</span>
-                    <span class="number-font">Line 84</span>
-                </div>
-                <div class="stack-code-wrap">
-                    <pre>
-<div class="stack-line"><span class="line-num">81</span><span class="line-content">  const fetchAnalytics = async () => {</span></div><div class="stack-line"><span class="line-num">82</span><span class="line-content">    const res = await api.get('/analytics');</span></div><div class="stack-line"><span class="line-num">83</span><span class="line-content">    const data = res.data;</span></div><div class="stack-line highlighted"><span class="line-num">84</span><span class="line-content">    const formatted = data.metrics.map((item: any) => ({</span></div><div class="stack-line"><span class="line-num">85</span><span class="line-content">      label: item.timestamp,</span></div><div class="stack-line"><span class="line-num">86</span><span class="line-content">      value: item.count</span></div><div class="stack-line"><span class="line-num">87</span><span class="line-content">    }));</span></div><div class="stack-line"><span class="line-num">88</span><span class="line-content">    setChartData(formatted);</span></div></pre>
-                </div>
+            <div id="stack-trace" class="stack-trace-container">
+                <div style="padding:20px;color:var(--text-muted);font-size:13px">Loading stack trace...</div>
             </div>
         </div>
 
@@ -1392,40 +1383,8 @@
             <div class="card-header">
                 <h3 class="card-title">User Action Trail (Breadcrumbs)</h3>
             </div>
-            
-            <div class="timeline">
-                <div class="timeline-item error">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-meta">
-                            <span class="timeline-title">Exception Crashing Triggered</span>
-                            <span class="timeline-time">19:54:12</span>
-                        </div>
-                        <div class="timeline-desc">TypeError: Cannot read properties of undefined (reading 'map')</div>
-                    </div>
-                </div>
-                
-                <div class="timeline-item action">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-meta">
-                            <span class="timeline-title">Fetch API Request Finished</span>
-                            <span class="timeline-time">19:54:11</span>
-                        </div>
-                        <div class="timeline-desc">GET /api/analytics 200 OK (data: { metrics: null })</div>
-                    </div>
-                </div>
-
-                <div class="timeline-item action">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-meta">
-                            <span class="timeline-title">User Clicked Navigation Link</span>
-                            <span class="timeline-time">19:54:08</span>
-                        </div>
-                        <div class="timeline-desc">Link clicked: href="/dashboard" label="View Details"</div>
-                    </div>
-                </div>
+            <div id="breadcrumbs-timeline" class="timeline">
+                <div style="padding:16px;color:var(--text-muted);font-size:12px">Loading breadcrumbs...</div>
             </div>
         </div>
 
@@ -1434,25 +1393,23 @@
             <div class="card-header">
                 <h3 class="card-title">Device & Environment</h3>
             </div>
-            
-            <table class="env-table">
-                <tr class="env-row">
-                    <td class="env-key">Browser</td>
-                    <td class="env-val">Chrome <span class="number-font">124.0.0</span> (Windows)</td>
-                </tr>
-                <tr class="env-row">
-                    <td class="env-key">Operating System</td>
-                    <td class="env-val">Windows <span class="number-font">11</span> (Build <span class="number-font">22631</span>)</td>
-                </tr>
-                <tr class="env-row">
-                    <td class="env-key">IP Address / Location</td>
-                    <td class="env-val"><span class="number-font">182.164.22.9</span> (Lahore, Pakistan)</td>
-                </tr>
-                <tr class="env-row">
-                    <td class="env-key">SDK Context</td>
-                    <td class="env-val"><code>bugradar-react@<span class="number-font">2.4.1</span></code></td>
-                </tr>
-            </table>
+            <div id="events-timeline">
+                <div style="padding:16px;color:var(--text-muted);font-size:12px">Loading events...</div>
+            </div>
+        </div>
+
+        <!-- Content Card: Comments -->
+        <div class="content-card">
+            <div class="card-header">
+                <h3 class="card-title">Comments</h3>
+            </div>
+            <div id="comments-list" style="margin-bottom:16px">
+                <div style="padding:16px;color:var(--text-muted);font-size:12px">Loading comments...</div>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center">
+                <input type="text" id="comment-input" placeholder="Add a comment..." style="flex:1;background:var(--card-bg);border:1px solid var(--card-border);border-radius:12px;padding:10px 14px;color:var(--text-main);font-size:13px;font-family:var(--font-main);outline:none">
+                <button class="btn btn-resolve" onclick="addComment()" style="padding:10px 16px;font-size:12px">Send</button>
+            </div>
         </div>
 
     </main>
@@ -1609,5 +1566,6 @@
         }
     </script>
 
+    <script src="app.js"></script>
 </body>
 </html>

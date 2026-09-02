@@ -138,9 +138,14 @@ bugradar.<span class="code-function">init</span>(
 }
 
 /* --------------------------------------------------------------------------
-   5. ONBOARDING STEP TRANSITION & TEST ERROR EVENT DEMO
+   5. ONBOARDING STEP TRANSITION (DEPRECATED - use handleOnboardingSubmit from app.js)
    -------------------------------------------------------------------------- */
 function handleCreateProject(event) {
+    // Redirect to the real handler in app.js
+    if (typeof handleOnboardingSubmit === 'function') {
+        return handleOnboardingSubmit(event);
+    }
+    // Fallback: original mock behavior
     event.preventDefault();
     const orgName = document.getElementById('orgname-input').value;
     const projName = document.getElementById('projname-input').value;
@@ -185,13 +190,42 @@ function simulateTestErrorEvent() {
     testBtn.innerText = 'Dispatching Error...';
     testBtn.disabled = true;
 
+    // Send a real test error to the ingestion endpoint
+    const dsnVal = document.getElementById('dsn-value')?.innerText;
+    if (dsnVal && dsnVal.includes('ingest')) {
+        fetch(dsnVal, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: 'Test error from BugRadar onboarding',
+                level: 'error',
+                environment: 'production',
+                exception: {
+                    type: 'Error',
+                    value: 'Test error from BugRadar onboarding',
+                    stacktrace: {
+                        frames: [
+                            { filename: 'src/test.js', lineno: 42, function: 'testFunction', colno: 5 },
+                            { filename: 'node_modules/app/index.js', lineno: 100, function: 'main' }
+                        ]
+                    }
+                },
+                breadcrumbs: [
+                    { category: 'ui.click', message: 'Button clicked', timestamp: new Date().toISOString() },
+                    { category: 'navigation', message: 'Page loaded', timestamp: new Date().toISOString() }
+                ],
+                tags: { browser: 'Chrome 120', os: 'Windows 10' }
+            })
+        }).catch(() => {});
+    }
+
     setTimeout(() => {
         if (radarDot) {
             radarDot.style.backgroundColor = 'var(--color-success)';
             radarDot.style.boxShadow = '0 0 12px var(--color-success)';
             radarDot.style.animation = 'none';
         }
-        statusText.innerHTML = '<span style="color: var(--color-success); font-weight: 600;">✓ First Error Event Received!</span> (TypeError at index.js:42)';
+        statusText.innerHTML = '<span style="color: var(--color-success); font-weight: 600;">✓ First Error Event Received!</span> (Test error at src/test.js:42)';
         testBtn.innerText = '✓ Event Captured!';
         testBtn.style.borderColor = 'var(--color-success)';
         testBtn.style.color = 'var(--color-success)';

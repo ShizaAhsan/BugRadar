@@ -141,35 +141,6 @@
 
     <!-- External Global Master JS File -->
     <script src="script.js"></script>
-    <script>
-        function handleLoginSubmit(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const submitBtn = document.getElementById('login-btn');
-
-            if (!email || !password) return;
-
-            submitBtn.innerHTML = '<span>Logging in...</span>';
-            submitBtn.style.opacity = '0.85';
-
-            setTimeout(() => {
-                submitBtn.innerHTML = '<span>✓ Logged In</span>';
-                submitBtn.style.backgroundColor = 'var(--color-success)';
-                
-                setTimeout(() => {
-                    alert(`Authenticated as ${email}! Redirecting to Onboarding...`);
-                    window.location.href = 'onboarding.html';
-                }, 600);
-            }, 800);
-        }
-
-        function handleForgotPassword(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            if (email) alert(`Password reset link sent to ${email}`);
-            else alert('Please enter your email above to receive reset instructions.');
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
