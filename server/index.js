@@ -17,6 +17,7 @@ app.set('trust proxy', 1);
 
 // Security headers with CSP
 app.use(helmet({
+  hsts: false,
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
@@ -27,6 +28,7 @@ app.use(helmet({
       connectSrc: ["'self'"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
+      upgradeInsecureRequests: null,
     },
   },
   crossOriginEmbedderPolicy: false,

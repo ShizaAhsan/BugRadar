@@ -9,6 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     services:
       postgres:
         image: postgres:15-alpine
@@ -23,6 +24,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
       redis:
         image: redis:7-alpine
         ports:
@@ -32,14 +34,22 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-      - run: npm ci
-      - run: npm test
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
         env:
           DB_HOST: localhost
           DB_PORT: 5432
@@ -55,17 +65,36 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to server
+      - name: Deploy to production
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_KEY }}
           script: |
-            cd /opt/bugradar
-            git pull origin main
-            docker compose down
+            set -e
+
+            cd /home/ubuntu/BugRadar
+
+            echo "Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "Rebuilding application..."
             docker compose up -d --build
+
+            echo "Running database migrations..."
             docker compose exec -T app node server/migrations/run.js
+
+            echo "Checking container status..."
+            docker compose ps
+
+            echo "Waiting for application health..."
+            sleep 10
+
+            echo "Checking application health..."
+            curl -f http://localhost/api/health
+
+            echo "Deployment successful!"

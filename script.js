@@ -231,3 +231,54 @@ function simulateTestErrorEvent() {
         testBtn.style.color = 'var(--color-success)';
     }, 1200);
 }
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Onboarding form submit
+    const onboardingForm = document.getElementById('onboarding-form');
+
+    if (onboardingForm && typeof handleOnboardingSubmit === 'function') {
+        onboardingForm.addEventListener('submit', handleOnboardingSubmit);
+    }
+
+    // Platform selection
+    document.querySelectorAll('.platform-card[data-platform]').forEach(card => {
+        card.addEventListener('click', () => {
+            selectPlatform(card, card.dataset.platform);
+        });
+    });
+
+    // Copy DSN
+    const copyDsnBtn = document.getElementById('copy-dsn-btn');
+
+    if (copyDsnBtn) {
+        copyDsnBtn.addEventListener('click', () => {
+            copyToClipboard('dsn-value', copyDsnBtn);
+        });
+    }
+
+    // Copy code
+    const copyCodeBtn = document.getElementById('copy-code-btn');
+
+    if (copyCodeBtn) {
+        copyCodeBtn.addEventListener('click', () => {
+            copyToClipboard('code-display', copyCodeBtn);
+        });
+    }
+
+    // Send test error
+    const testEventBtn = document.getElementById('test-event-btn');
+
+    if (testEventBtn) {
+        testEventBtn.addEventListener('click', simulateTestErrorEvent);
+    }
+
+    // Back to project form
+    const backProjectBtn = document.getElementById('back-project-btn');
+
+    if (backProjectBtn) {
+        backProjectBtn.addEventListener('click', () => {
+            location.reload();
+        });
+    }
+
+});

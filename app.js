@@ -1153,7 +1153,45 @@ async function initPage() {
 
 // Run on DOM ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initPage);
+  document.addEventListener('DOMContentLoaded', () => {
+    initPage();
+
+    const signupForm = document.getElementById('signup-form');
+
+    if (signupForm) {
+      signupForm.addEventListener('submit', handleSignUpSubmit);
+    }
+
+    const loginForm = document.getElementById('login-form');
+
+    if (loginForm) {
+      loginForm.addEventListener('submit', handleLoginSubmit);
+    }
+
+    const passwordToggle = document.getElementById('password-toggle');
+
+    if (passwordToggle) {
+      passwordToggle.addEventListener('click', togglePasswordVisibility);
+    }
+  });
 } else {
   initPage();
+
+  const signupForm = document.getElementById('signup-form');
+
+  if (signupForm) {
+    signupForm.addEventListener('submit', handleSignUpSubmit);
+  }
+
+  const loginForm = document.getElementById('login-form');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', handleLoginSubmit);
+  }
+
+  const passwordToggle = document.getElementById('password-toggle');
+
+  if (passwordToggle) {
+    passwordToggle.addEventListener('click', togglePasswordVisibility);
+  }
 }

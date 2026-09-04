@@ -3,6 +3,12 @@ const config = require('./config');
 
 const pool = new Pool({
   ...config.database,
+
+  // RDS requires encrypted PostgreSQL connections.
+  ssl: config.nodeEnv === 'production'
+    ? { rejectUnauthorized: false }
+    : undefined,
+
   max: config.database.max || 20,
   idleTimeoutMillis: config.database.idleTimeoutMillis || 30000,
   connectionTimeoutMillis: config.database.connectionTimeoutMillis || 5000,

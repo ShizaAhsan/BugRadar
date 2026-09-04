@@ -3,187 +3,447 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Onboarding & Project Setup — BugRadar™</title>
-    
-    <!-- Google Fonts: Inter & JetBrains Mono -->
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet"
+    >
 
-    <!-- External Global CSS File -->
+    <!-- Global CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <!-- ================================================================= -->
-    <!-- FIXED CORNER GRAPHICS (TOP LEFT & DOWN RIGHT ROTATED)             -->
-    <!-- ================================================================= -->
-    <img src="glass_knot.png" alt="Glass Knot Top Left" class="bg-orb-top-left">
-    <img src="glass_knot.png" alt="Glass Knot Down Right Rotated" class="bg-orb-down-right">
+    <!-- Background Graphics -->
+    <img
+        src="glass_knot.png"
+        alt="Glass Knot Top Left"
+        class="bg-orb-top-left"
+    >
+
+    <img
+        src="glass_knot.png"
+        alt="Glass Knot Down Right Rotated"
+        class="bg-orb-down-right"
+    >
+
     <div class="bg-ambient-aura"></div>
 
-    <!-- ================================================================= -->
-    <!-- TOP BRANDING & NAVIGATION                                         -->
-    <!-- ================================================================= -->
+
+    <!-- Top Navigation -->
     <nav class="top-nav">
+
         <a href="index.html" class="brand-logo">
+
             <div class="brand-icon">
-                <!-- Lucide Radar Icon -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M19.07 4.93A10 10 0 0 0 6.99 3.34"/>
                     <path d="M4.93 19.07A10 10 0 0 0 17.01 20.66"/>
                     <path d="M2 12h20"/>
                     <path d="M12 2v20"/>
                     <circle cx="12" cy="12" r="3"/>
                 </svg>
+
             </div>
+
             <span>BugRadar</span>
+
         </a>
 
+
         <a href="index.html" class="back-home-link">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.75"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            >
                 <line x1="19" y1="12" x2="5" y2="12"></line>
                 <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
+
             <span>Back to Home</span>
+
         </a>
+
     </nav>
 
-    <!-- ================================================================= -->
-    <!-- MAIN ONBOARDING CONTAINER                                         -->
-    <!-- ================================================================= -->
+
+    <!-- Main Onboarding Container -->
     <main class="main-container wide">
-        
-        <!-- Step Progress Indicator Bar -->
+
+        <!-- Progress Indicator -->
         <div class="onboarding-steps">
+
             <div class="step-indicator active" id="indicator-step-1">
+
                 <div class="step-number">1</div>
+
                 <span>Create Workspace</span>
+
             </div>
+
+
             <div class="step-divider-line"></div>
+
+
             <div class="step-indicator" id="indicator-step-2">
+
                 <div class="step-number">2</div>
+
                 <span>SDK Setup & DSN</span>
+
             </div>
+
         </div>
 
+
+        <!-- Main Card -->
         <div class="card-box">
-            
-            <!-- STEP 1 VIEW: CREATE ORGANIZATION & PROJECT -->
-            <div id="step-1-view" style="display: flex; flex-direction: column; gap: var(--space-4);">
-                
+
+
+            <!-- ========================================================= -->
+            <!-- STEP 1: CREATE WORKSPACE                                  -->
+            <!-- ========================================================= -->
+
+            <div
+                id="step-1-view"
+                style="display: flex; flex-direction: column; gap: var(--space-4);"
+            >
+
                 <div class="card-header">
-                    <h1 class="card-title">Setup your Organization & First Project</h1>
-                    <p class="card-subtitle">Performance meets scale. Configure your tracking environment to receive your DSN key.</p>
+
+                    <h1 class="card-title">
+                        Setup your Organization & First Project
+                    </h1>
+
+                    <p class="card-subtitle">
+                        Performance meets scale. Configure your tracking environment to receive your DSN key.
+                    </p>
+
                 </div>
 
-                <form id="onboarding-form" onsubmit="handleOnboardingSubmit(event)" style="display: flex; flex-direction: column; gap: var(--space-4);">
-                    
-                    <!-- Organization Name Input -->
+
+                <!-- Onboarding Form -->
+                <form
+                    id="onboarding-form"
+                    style="display: flex; flex-direction: column; gap: var(--space-4);"
+                >
+
+
+                    <!-- Organization Name -->
                     <div class="form-group">
-                        <label for="orgname-input" class="form-label">Organization Name</label>
+
+                        <label
+                            for="orgname-input"
+                            class="form-label"
+                        >
+                            Organization Name
+                        </label>
+
+
                         <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="orgname-input" 
-                                class="form-input" 
-                                placeholder="e.g., Acme Engineering" 
-                                value="Acme Corp" 
+
+                            <input
+                                type="text"
+                                id="orgname-input"
+                                class="form-input"
+                                placeholder="e.g., Acme Engineering"
+                                value="Acme Corp"
                                 required
                             >
+
+
                             <span class="input-icon-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
+
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <rect
+                                        width="16"
+                                        height="20"
+                                        x="4"
+                                        y="2"
+                                        rx="2"
+                                    ></rect>
+
                                     <path d="M9 22v-4h6v4"></path>
+
                                     <path d="M8 6h.01"></path>
                                     <path d="M16 6h.01"></path>
                                     <path d="M12 6h.01"></path>
+
                                 </svg>
+
                             </span>
+
                         </div>
+
                     </div>
 
-                    <!-- Project Name Input -->
+
+                    <!-- Project Name -->
                     <div class="form-group">
-                        <label for="projname-input" class="form-label">First Project Name</label>
+
+                        <label
+                            for="projname-input"
+                            class="form-label"
+                        >
+                            First Project Name
+                        </label>
+
+
                         <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="projname-input" 
-                                class="form-input" 
-                                placeholder="e.g., store-frontend-web" 
-                                value="store-frontend-api" 
+
+                            <input
+                                type="text"
+                                id="projname-input"
+                                class="form-input"
+                                placeholder="e.g., store-frontend-web"
+                                value="store-frontend-api"
                                 required
                             >
+
+
                             <span class="input-icon-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+
                                     <polyline points="16 18 22 12 16 6"></polyline>
+
                                     <polyline points="8 6 2 12 8 18"></polyline>
+
                                 </svg>
+
                             </span>
+
                         </div>
+
                     </div>
 
-                    <!-- Select Platform SDK -->
+
+                    <!-- Platform Selection -->
                     <div class="form-group">
-                        <label class="form-label">Select Application Platform</label>
+
+                        <label class="form-label">
+                            Select Application Platform
+                        </label>
+
+
                         <div class="platform-grid">
-                            <div class="platform-card selected" onclick="selectPlatform(this, 'javascript')">
-                                <span class="platform-icon">⚡</span>
-                                <span class="platform-name">JavaScript</span>
+
+
+                            <!-- JavaScript -->
+                            <div
+                                class="platform-card selected"
+                                data-platform="javascript"
+                            >
+
+                                <span class="platform-icon">
+                                    ⚡
+                                </span>
+
+                                <span class="platform-name">
+                                    JavaScript
+                                </span>
+
                             </div>
-                            <div class="platform-card" onclick="selectPlatform(this, 'react')">
-                                <span class="platform-icon">⚛️</span>
-                                <span class="platform-name">React / Next</span>
+
+
+                            <!-- React -->
+                            <div
+                                class="platform-card"
+                                data-platform="react"
+                            >
+
+                                <span class="platform-icon">
+                                    ⚛️
+                                </span>
+
+                                <span class="platform-name">
+                                    React / Next
+                                </span>
+
                             </div>
-                            <div class="platform-card" onclick="selectPlatform(this, 'node')">
-                                <span class="platform-icon">🟢</span>
-                                <span class="platform-name">Node.js</span>
+
+
+                            <!-- Node -->
+                            <div
+                                class="platform-card"
+                                data-platform="node"
+                            >
+
+                                <span class="platform-icon">
+                                    🟢
+                                </span>
+
+                                <span class="platform-name">
+                                    Node.js
+                                </span>
+
                             </div>
-                            <div class="platform-card" onclick="selectPlatform(this, 'python')">
-                                <span class="platform-icon">🐍</span>
-                                <span class="platform-name">Python</span>
+
+
+                            <!-- Python -->
+                            <div
+                                class="platform-card"
+                                data-platform="python"
+                            >
+
+                                <span class="platform-icon">
+                                    🐍
+                                </span>
+
+                                <span class="platform-name">
+                                    Python
+                                </span>
+
                             </div>
+
                         </div>
+
                     </div>
 
-                    <!-- Create & Continue Button -->
-                    <button type="submit" class="btn-primary" style="margin-top: var(--space-2);">
-                        <span>Generate DSN & Continue →</span>
+
+                    <!-- Generate DSN Button -->
+                    <button
+                        type="submit"
+                        class="btn-primary"
+                        style="margin-top: var(--space-2);"
+                    >
+
+                        <span>
+                            Generate DSN & Continue →
+                        </span>
+
                     </button>
+
+
                 </form>
 
             </div>
 
-            <!-- STEP 2 VIEW: SDK INTEGRATION & DSN SNIPPET (Shown after Step 1) -->
-            <div id="step-2-view" style="display: none; flex-direction: column; gap: var(--space-4);">
-                
+
+            <!-- ========================================================= -->
+            <!-- STEP 2: SDK SETUP                                         -->
+            <!-- ========================================================= -->
+
+            <div
+                id="step-2-view"
+                style="display: none; flex-direction: column; gap: var(--space-4);"
+            >
+
+
                 <div class="card-header">
-                    <h1 class="card-title">Configure SDK & Verify Connection</h1>
-                    <p class="card-subtitle">Copy your project DSN key and paste the initialization snippet into your codebase.</p>
+
+                    <h1 class="card-title">
+                        Configure SDK & Verify Connection
+                    </h1>
+
+                    <p class="card-subtitle">
+                        Copy your project DSN key and paste the initialization snippet into your codebase.
+                    </p>
+
                 </div>
 
-                <!-- Generated DSN Key Box -->
+
+                <!-- DSN -->
                 <div class="form-group">
-                    <label class="form-label">Your Project Data Source Name (DSN)</label>
+
+                    <label class="form-label">
+                        Your Project Data Source Name (DSN)
+                    </label>
+
+
                     <div class="dsn-box">
-                        <span id="dsn-value">https://b892a0e2a8@ingest.bugradar.io/proj_9801</span>
-                        <button class="copy-btn" onclick="copyToClipboard('dsn-value', this)">
-                            <span>Copy DSN</span>
+
+                        <span id="dsn-value">
+                            https://b892a0e2a8@ingest.bugradar.io/proj_9801
+                        </span>
+
+
+                        <button
+                            class="copy-btn"
+                            id="copy-dsn-btn"
+                            type="button"
+                        >
+
+                            <span>
+                                Copy DSN
+                            </span>
+
                         </button>
+
                     </div>
+
                 </div>
 
-                <!-- Pre-filled Code Snippet -->
+
+                <!-- Integration Code -->
                 <div class="form-group">
-                    <label class="form-label">Integration Snippet</label>
+
+                    <label class="form-label">
+                        Integration Snippet
+                    </label>
+
+
                     <div class="code-block-container">
+
                         <div class="code-block-header">
-                            <span>main.js</span>
-                            <button class="copy-btn" onclick="copyToClipboard('code-display', this)">Copy Code</button>
+
+                            <span>
+                                main.js
+                            </span>
+
+
+                            <button
+                                class="copy-btn"
+                                id="copy-code-btn"
+                                type="button"
+                            >
+                                Copy Code
+                            </button>
+
                         </div>
-                        <pre class="code-block" id="code-display">
-<span class="code-comment">// 1. Install via npm</span>
+
+
+                        <pre
+                            class="code-block"
+                            id="code-display"
+                        ><span class="code-comment">// 1. Install via npm</span>
 <span class="code-keyword">npm install</span> @bugradar/browser
 
 <span class="code-comment">// 2. Initialize in your application entry file</span>
@@ -194,42 +454,96 @@
   environment: <span class="code-string">"production"</span>,
   tracesSampleRate: <span class="code-string">1.0</span>,
 });</pre>
+
                     </div>
+
                 </div>
 
-                <!-- Live Polling Status Box -->
-                <div class="polling-status-box" id="polling-box">
+
+                <!-- Test Event -->
+                <div
+                    class="polling-status-box"
+                    id="polling-box"
+                >
+
                     <div class="polling-left">
-                        <div class="radar-pulse-dot" id="radar-dot"></div>
-                        <span class="polling-text" id="polling-text-status">Waiting for your first error event...</span>
+
+                        <div
+                            class="radar-pulse-dot"
+                            id="radar-dot"
+                        ></div>
+
+
+                        <span
+                            class="polling-text"
+                            id="polling-text-status"
+                        >
+                            Waiting for your first error event...
+                        </span>
+
                     </div>
-                    <button class="test-event-btn" id="test-event-btn" onclick="simulateTestErrorEvent()">
+
+
+                    <button
+                        class="test-event-btn"
+                        id="test-event-btn"
+                        type="button"
+                    >
                         Send Test Error
                     </button>
+
                 </div>
 
-                <!-- Proceed to Dashboard Console CTA -->
-                <div style="display: flex; gap: var(--space-3); margin-top: var(--space-2);">
-                    <button class="btn-secondary" style="flex: 1;" onclick="location.reload()">
+
+                <!-- Dashboard Buttons -->
+                <div
+                    style="display: flex; gap: var(--space-3); margin-top: var(--space-2);"
+                >
+
+                    <button
+                        class="btn-secondary"
+                        id="back-project-btn"
+                        type="button"
+                        style="flex: 1;"
+                    >
                         ← Back to Project Form
                     </button>
-                    <a href="dashboard.html" class="btn-primary" style="flex: 2; text-decoration: none;">
-                        <span>Go to Dashboard Console →</span>
+
+
+                    <a
+                        href="dashboard.html"
+                        class="btn-primary"
+                        style="flex: 2; text-decoration: none;"
+                    >
+                        <span>
+                            Go to Dashboard Console →
+                        </span>
                     </a>
+
                 </div>
+
 
             </div>
 
+
         </div>
+
     </main>
 
-    <!-- Footer Copyright -->
+
+    <!-- Footer -->
     <footer class="card-footer-text">
-        <p>© 2026 BugRadar Inc. All rights reserved.</p>
+
+        <p>
+            © 2026 BugRadar Inc. All rights reserved.
+        </p>
+
     </footer>
 
-    <!-- External Global JavaScript File -->
+
+    <!-- JavaScript -->
     <script src="script.js"></script>
     <script src="app.js"></script>
+
 </body>
 </html>

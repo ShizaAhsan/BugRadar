@@ -60,7 +60,7 @@
             </div>
 
             <!-- Login Form -->
-            <form id="login-form" onsubmit="handleLoginSubmit(event)" style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <form id="login-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
                 
                 <!-- Email Field -->
                 <div class="form-group">
@@ -97,7 +97,7 @@
                             required 
                             autocomplete="current-password"
                         >
-                        <button type="button" class="input-icon-btn" id="password-toggle" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility">
+                        <button type="button" class="input-icon-btn" id="password-toggle" aria-label="Toggle password visibility">
                             <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
@@ -112,7 +112,7 @@
                         <input type="checkbox" id="remember" class="remember-checkbox" checked>
                         <span>Remember me</span>
                     </label>
-                    <a href="#" class="forgot-link" onclick="handleForgotPassword(event)">Forgotten?</a>
+                    <a href="#" class="forgot-link">Forgotten?</a>
                 </div>
 
                 <!-- Primary Log In CTA -->
