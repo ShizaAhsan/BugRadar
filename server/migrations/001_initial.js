@@ -1,4 +1,4 @@
-const { pool } = require('../db');
+
 
 const migration = `
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -159,22 +159,9 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_log(organization_id, created_at DESC);
 `;
 
-async function runMigration() {
-  const client = await pool.connect();
-  try {
+module.exports = {
+  up: async (client) => {
     await client.query(migration);
     console.log('Migration completed successfully');
-  } catch (err) {
-    console.error('Migration failed:', err);
-    throw err;
-  } finally {
-    client.release();
-    await pool.end();
   }
-}
-
-if (require.main === module) {
-  runMigration();
-}
-
-module.exports = { runMigration };
+};
