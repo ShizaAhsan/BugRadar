@@ -121,7 +121,10 @@ jobs:
 
   deploy:
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Only deploy from the canonical repository, where SERVER_HOST/SERVER_USER/
+    # SERVER_KEY secrets are configured. Forks have no (and can never inherit)
+    # those secrets, so the ssh action would fail with "missing server host".
+    if: github.repository == 'ShizaAhsan/BugRadar' && github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
