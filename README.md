@@ -71,16 +71,19 @@ After running the seed script:
 ## Docker Deployment
 
 ```bash
-# Production-style stack (nginx on 80/443 with TLS — see DEPLOY.md for certs)
+# Production stack (same services as version one: app + Redis + nginx on
+# 80/443 with TLS — PostgreSQL stays external, see DEPLOY.md)
 docker compose up -d
 
-# Local stack (HTTP-only nginx on port 80, no certificates required)
+# Local stack (adds a bundled PostgreSQL, HTTP-only nginx on port 80,
+# no certificates required)
 docker compose -f docker-compose.local.yml up -d
 ```
 
-This starts PostgreSQL, Redis, the BugRadar server (also published on
-`localhost:3000`) and an nginx reverse proxy. See `DEPLOY.md` for SSL setup,
-backups, and the full environment-variable reference.
+Production uses the external database configured via `DB_HOST` in `.env`;
+only the local stack bundles its own PostgreSQL (published on
+`localhost:3000`). See `DEPLOY.md` for SSL setup, backups, and the full
+environment-variable reference.
 
 ## SDK Integration
 

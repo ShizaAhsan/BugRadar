@@ -56,9 +56,11 @@ Fill in:
 docker compose up -d
 ```
 
-`docker-compose.yml` runs all four services: PostgreSQL, Redis, the app
-(port 3000 published + nginx on 80/443). For a local, HTTP-only stack that
-needs no certificates, use the alternate file instead:
+`docker-compose.yml` runs the same three services version one deployed:
+the app, Redis and nginx (80/443). **PostgreSQL is external** — point
+`DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` in `.env` at your
+database host, exactly as in version one. For a self-contained local stack
+that bundles PostgreSQL and needs no certificates, use the alternate file:
 
 ```bash
 docker compose -f docker-compose.local.yml up -d
@@ -75,8 +77,11 @@ docker compose exec app node server/migrations/seed.js  # optional: demo data
 
 ### 6. Verify
 
+The app port is not published in the production stack (nginx fronts it on
+80/443), so check health from inside the container:
+
 ```bash
-curl http://localhost:3000/api/health
+docker compose exec app wget -qO- http://localhost:3000/api/health
 ```
 
 ---
@@ -87,8 +92,8 @@ curl http://localhost:3000/api/health
 `/etc/letsencrypt/live/<domain>/` — `docker-compose.yml` mounts the host's
 `/etc/letsencrypt` directory read-only into the nginx container. There is no
 separate cert-copy step and no commented-out block to enable; before the
-certificates exist, the nginx container will restart-loop (everything else
-keeps working on port 3000).
+certificates exist, the nginx container will restart-loop (the app and Redis
+keep running, but nothing is served until certificates are obtained).
 
 ### 1. Update `nginx.conf`
 
@@ -203,23 +208,26 @@ pm2 save
 
 ## Backups
 
+PostgreSQL runs outside the compose stack in production (same as version
+one), so back it up from the database host (or any machine that can reach it):
+
 ### PostgreSQL
 
 ```bash
-docker compose exec postgres pg_dump -U bugradar bugradar > backup_$(date +%Y%m%d).sql
+pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" > backup_$(date +%Y%m%d).sql
 ```
 
 ### Restore
 
 ```bash
-cat backup.sql | docker compose exec -T postgres psql -U bugradar bugradar
+psql -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" < backup.sql
 ```
 
 ### Automated backup cron
 
 ```bash
-# Add to crontab (daily at 2 AM)
-0 2 * * * docker compose exec -T postgres pg_dump -U bugradar bugradar | gzip > /backups/bugradar_$(date +\%Y\%m\%d).sql.gz
+# Add to crontab on the database host (daily at 2 AM)
+0 2 * * * pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" | gzip > /backups/bugradar_$(date +\%Y\%m\%d).sql.gz
 ```
 
 ---

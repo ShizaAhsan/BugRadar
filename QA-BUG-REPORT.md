@@ -295,7 +295,7 @@ All phases implemented and verified. Backup of the original tree: `C:\Users\Lara
 - **S6** Python SDK accepts exception instances (no more `TypeError`), strips trailing `/store` from DSN, never uploads frame `locals`.
 
 ### Phase 5 — Infra, tests, docs (D2–D7)
-- **D2** `docker-compose.yml` gains a postgres service, publishes 3000, defaults `DB_HOST=postgres`.
+- **D2** local stack (`docker-compose.local.yml`) bundles PostgreSQL; the **production** `docker-compose.yml` keeps version one's deployed shape — `app + redis + nginx` with the **external database** configured via `DB_HOST` in `.env` (no new services introduced to match the already-deployed environment), and publishes 3000 only in the local file.
 - **D3** local stack uses new HTTP-only `nginx.local.conf` (no cert crash-loop); redis healthcheck uses `CMD-SHELL` so `-a <pass>` splits correctly.
 - **D4** nginx: removed dead `proxy_cache_valid`; `Connection` header now `$http_upgrade` (keepalive preserved).
 - **D5** `test-ingestion.js` asserts 2xx and exits 1 on rejection; `test-full.js`/`test-issues.js` are guarded, env-configurable (`BASE_URL`, `DEMO_EMAIL`, `DEMO_PASSWORD`), seed-optional; `npm test` runs the suite; CI now migrates, seeds, boots the server and runs it.

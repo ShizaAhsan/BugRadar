@@ -149,10 +149,22 @@ jobs:
             echo "Checking container status..."
             docker compose ps
 
+            # The production stack does not publish the app port (nginx fronts
+            # it on 80/443), and a plain HTTP request to port 80 is answered by
+            # nginx's 301 redirect — which curl -f counts as success. Poll the
+            # app's real health endpoint (verifies DB + Redis) instead.
             echo "Waiting for application health..."
-            sleep 10
-
-            echo "Checking application health..."
-            curl -f http://localhost/api/health
+            for i in $(seq 1 30); do
+              if docker compose exec -T app wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q '"status":"ok"'; then
+                echo "Application healthy!"
+                break
+              fi
+              if [ "$i" = "30" ]; then
+                echo "Application failed to become healthy"
+                docker compose logs --tail=50 app
+                exit 1
+              fi
+              sleep 2
+            done
 
             echo "Deployment successful!"
