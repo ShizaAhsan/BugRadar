@@ -1,6 +1,8 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate, requireOrgAccess, authorize } = require('../middleware/auth');
+const { isUUID } = require('../validate');
+const config = require('../config');
 
 const router = express.Router();
 
@@ -11,6 +13,27 @@ router.post('/', async (req, res) => {
     const { name, slug } = req.body;
     if (!name || !slug) {
       return res.status(400).json({ error: 'Name and slug are required' });
+    }
+
+    // Enforce the plan's organization limit for this owner (QA-BUG-REPORT.md B7):
+    // free owners may own 1 org; owners who already have a pro org get the pro limit.
+    const ownedResult = await query(
+      `SELECT COUNT(*)::int as owned,
+              COUNT(*) FILTER (WHERE o.plan = 'pro')::int as pro_owned
+       FROM memberships m
+       JOIN organizations o ON o.id = m.organization_id
+       WHERE m.user_id = $1 AND m.role = 'owner'`,
+      [req.user.id]
+    );
+    const owned = ownedResult.rows[0].owned;
+    const planKey = ownedResult.rows[0].pro_owned > 0 ? 'pro' : 'free';
+    const maxOrgs = config.plans[planKey]?.maxOrgs ?? 1;
+
+    if (owned >= maxOrgs) {
+      return res.status(403).json({
+        error: `Organization limit reached for ${planKey} plan (max ${maxOrgs})`,
+        upgrade: planKey === 'free',
+      });
     }
 
     const slugClean = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
@@ -107,6 +130,10 @@ router.post('/:orgId/members', requireOrgAccess, authorize('owner', 'admin'), as
 
 router.delete('/:orgId/members/:userId', requireOrgAccess, authorize('owner', 'admin'), async (req, res) => {
   try {
+    if (!isUUID(req.params.userId)) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
     if (req.params.userId === req.user.id && req.orgMembership.role === 'owner') {
       return res.status(400).json({ error: 'Owner cannot remove themselves' });
     }

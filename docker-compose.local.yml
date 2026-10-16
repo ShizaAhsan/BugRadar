@@ -45,7 +45,10 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "${REDIS_PASSWORD:+-a ${REDIS_PASSWORD}}", "ping"]
+      # CMD-SHELL so the `-a <password>` becomes two argv tokens; the old CMD
+      # form passed "-a secret" as ONE argument and redis-cli never authenticated
+      # → container never healthy → app never started (QA-BUG-REPORT.md D3)
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a ${REDIS_PASSWORD}} ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -57,10 +60,10 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
+      # HTTP-only local config — the production nginx.conf reads Let's Encrypt
+      # certs that don't exist locally and crash-loops (QA-BUG-REPORT.md D3)
+      - ./nginx.local.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
     restart: unless-stopped

@@ -2,11 +2,21 @@ const express = require('express');
 const crypto = require('crypto');
 const { query } = require('../db');
 const { authenticate, requireOrgAccess, authorize } = require('../middleware/auth');
+const { isUUID } = require('../validate');
 const config = require('../config');
 
 const router = express.Router();
 
 router.use(authenticate);
+
+// Reject malformed project ids up front with 404 instead of a Postgres 500 (QA-BUG-REPORT.md B11)
+function requireValidProjectId(req, res) {
+  if (!isUUID(req.params.projectId)) {
+    res.status(404).json({ error: 'Project not found' });
+    return false;
+  }
+  return true;
+}
 
 router.get('/org/:orgId', requireOrgAccess, async (req, res) => {
   try {
@@ -64,6 +74,7 @@ router.post('/org/:orgId', requireOrgAccess, authorize('owner', 'admin'), async 
 
 router.get('/:projectId', async (req, res) => {
   try {
+    if (!requireValidProjectId(req, res)) return;
     const result = await query('SELECT * FROM projects WHERE id = $1', [req.params.projectId]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });
@@ -85,6 +96,7 @@ router.get('/:projectId', async (req, res) => {
 
 router.patch('/:projectId', async (req, res) => {
   try {
+    if (!requireValidProjectId(req, res)) return;
     const projectResult = await query('SELECT * FROM projects WHERE id = $1', [req.params.projectId]);
     if (projectResult.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });
@@ -125,6 +137,7 @@ router.patch('/:projectId', async (req, res) => {
 
 router.post('/:projectId/regenerate-dsn', async (req, res) => {
   try {
+    if (!requireValidProjectId(req, res)) return;
     const projectResult = await query('SELECT * FROM projects WHERE id = $1', [req.params.projectId]);
     if (projectResult.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });
@@ -151,6 +164,7 @@ router.post('/:projectId/regenerate-dsn', async (req, res) => {
 
 router.delete('/:projectId', async (req, res) => {
   try {
+    if (!requireValidProjectId(req, res)) return;
     const projectResult = await query('SELECT * FROM projects WHERE id = $1', [req.params.projectId]);
     if (projectResult.rows.length === 0) {
       return res.status(404).json({ error: 'Project not found' });

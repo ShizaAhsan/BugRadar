@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BugRadar™ - Performance & Latency Monitoring</title>
+    <title>BugRadar™ - Dashboard</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
+        /* LANDING PAGE COLOR PALETTE & REFERENCE LAYOUT */
         :root {
             --bg-color: #030303;
             --sidebar-bg: #030303;
@@ -24,8 +25,8 @@
             --accent-blue-hover: #2563eb;
             --accent-cyan: #06b6d4;
             --error-red: #ef4444;
+            --error-red-bg: rgba(239, 68, 68, 0.1);
             --success-green: #10b981;
-            --warning-orange: #f59e0b;
             
             --radius-card: 20px;
             --radius-pill: 50px;
@@ -145,74 +146,293 @@
             font-weight: 600;
         }
 
-        /* --- MAIN WRAPPER --- */
+        .nav-badge {
+            margin-left: auto;
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 50px;
+        }
+
+        /* --- BREADCRUMBS PATH (Matching Issue Detail Page) --- */
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .breadcrumbs a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .breadcrumbs a:hover {
+            color: var(--accent-blue);
+        }
+        .breadcrumbs .separator {
+            color: #3f3f46;
+        }
+        .breadcrumbs .current {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* --- MAIN CONTENT --- */
         .main-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding: 36px 40px;
-            background: var(--bg-color);
+            padding: 24px 32px;
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 40%), var(--bg-color);
         }
 
-        .page-header {
-            margin-bottom: 28px;
+        /* Top Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
         }
-        .page-header h1 {
-            font-size: 26px;
-            line-height: 1.3;
-            margin-bottom: 6px;
+
+        .header-pills {
+            display: flex;
+            gap: 12px;
         }
-        .page-header h1 .bold { font-weight: 800; color: #ffffff; }
-        .page-header h1 .light { font-weight: 400; color: rgba(255, 255, 255, 0.45); }
-        .page-header p {
-            font-size: 14px;
+        .pill-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 8px 16px;
+            border-radius: var(--radius-pill);
+            color: var(--text-muted);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pill-btn:hover {
+            border-color: rgba(255,255,255,0.2);
+            color: var(--text-main);
+        }
+
+        /* Search Bar & Dropdown */
+        .search-wrapper {
+            position: relative;
+            width: 320px;
+        }
+        .search-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar:focus-within {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+        }
+        .search-bar input {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+        .search-bar input::placeholder {
             color: var(--text-muted);
         }
+        .search-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0; right: 0;
+            background: #0d0d11;
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            z-index: 50;
+            display: none;
+        }
+        .search-dropdown.visible { display: block; }
+        .search-result-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--card-border);
+            text-decoration: none; color: var(--text-main);
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(255,255,255,0.06); }
+        .search-result-icon { font-size: 14px; flex-shrink: 0; }
+        .search-result-text { display: flex; flex-direction: column; gap: 2px; }
+        .search-result-title { font-weight: 600; font-size: 12px; }
+        .search-result-sub { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
+        .search-no-result { padding: 14px 16px; font-size: 12px; color: var(--text-muted); text-align: center; }
 
-        /* Metric Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            margin-bottom: 28px;
+        /* User Header Actions & Profile Dropdown */
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .icon-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
         }
 
-        .metric-card {
+        .user-profile-wrap { position: relative; }
+        .user-profile {
+            display: flex; align-items: center; gap: 10px; cursor: pointer;
+            padding: 4px 8px; border-radius: 20px; transition: background 0.2s;
+        }
+        .user-profile:hover { background: rgba(255, 255, 255, 0.04); }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: var(--accent-cyan);
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000;
+        }
+        .profile-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 180px;
+            background: #0d0d11;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+            z-index: 50;
+            display: none;
+        }
+        .profile-dropdown.visible { display: block; }
+        .profile-drop-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 16px;
+            font-size: 13px; color: var(--text-main);
+            cursor: pointer; text-decoration: none;
+            border-bottom: 1px solid var(--card-border);
+            transition: background 0.15s;
+        }
+        .profile-drop-item:last-child { border-bottom: none; }
+        .profile-drop-item:hover { background: rgba(255,255,255,0.06); }
+
+        /* KPI Card & Time Dropdown */
+        .dashboard-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .top-cards-row {
+            display: flex;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 24px;
+        }
+
+        .main-kpi-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: visible;
+        }
+        .main-kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.1), transparent 60%);
+            pointer-events: none; border-radius: var(--radius-card);
+        }
+
+        .kpi-title-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+            position: relative;
+        }
+        .kpi-title { font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        
+        .kpi-big-value { font-size: 32px; font-weight: 700; font-family: var(--font-number); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+        .kpi-subtitle { font-size: 12px; color: var(--success-green); display: flex; align-items: center; gap: 4px; font-family: var(--font-number); }
+
+        .kpi-time-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            right: 0;
+            min-width: 140px;
+            background: #0d0d11;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            z-index: 50;
+            display: none;
+        }
+        .kpi-time-dropdown.visible { display: block; }
+        .kpi-time-opt {
+            padding: 9px 14px;
+            font-size: 12px; color: var(--text-muted);
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            transition: background 0.15s;
+            font-family: var(--font-number);
+        }
+        .kpi-time-opt:last-child { border-bottom: none; }
+        .kpi-time-opt:hover, .kpi-time-opt.active { background: rgba(59,130,246,0.12); color: #60a5fa; }
+
+        .small-cards-container {
+            display: flex;
+            gap: 16px;
+            flex: 2;
+        }
+        .small-card {
+            flex: 1;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
-        .metric-title {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 500;
+        .small-card-value {
+            font-size: 20px; font-weight: 700; font-family: var(--font-number); margin-top: 16px; font-variant-numeric: tabular-nums;
         }
-        .metric-val {
-            font-size: 26px;
-            font-weight: 700;
-            margin-top: 12px;
-            margin-bottom: 4px;
-        }
-        .metric-sub {
-            font-size: 12px;
-            color: var(--success-green);
-        }
+        .text-error { color: var(--error-red) !important; }
 
-        /* Control Bar */
-        .controls-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            gap: 16px;
+        /* Chart Section */
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 24px;
         }
-
-        .time-filters {
+        .chart-header-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+        }
+        .time-filters, #statusFilterPills {
             display: flex;
             gap: 4px;
             background: rgba(255, 255, 255, 0.03);
@@ -220,7 +440,8 @@
             border-radius: var(--radius-pill);
             border: 1px solid var(--card-border);
         }
-        .filter-pill-btn {
+
+        .time-filter-btn, .table-pill-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
@@ -233,85 +454,220 @@
             font-family: var(--font-number);
             outline: none;
         }
-        .filter-pill-btn.active {
+
+        .time-filter-btn.active, .table-pill-btn.active {
             background: var(--accent-blue);
             color: #ffffff;
+            font-weight: 600;
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
-        .search-bar {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 10px 18px;
-            border-radius: var(--radius-pill);
-            width: 280px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .search-bar input {
-            background: none;
-            border: none;
+        .time-filter-btn:hover:not(.active), .table-pill-btn:hover:not(.active) {
             color: var(--text-main);
-            outline: none;
-            width: 100%;
-            font-size: 13px;
+            background: rgba(255, 255, 255, 0.04);
         }
 
-        /* Table Card */
+        .chart-wrapper {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 180px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-number);
+            padding-right: 8px;
+            user-select: none;
+        }
+
+        .chart-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .svg-chart-container {
+            width: 100%;
+            height: 190px;
+            position: relative;
+            cursor: grab;
+            padding-top: 15px;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        .svg-chart-container svg {
+            overflow: visible;
+        }
+
+        .x-axis {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-number);
+            border-top: 1px solid var(--card-border);
+            user-select: none;
+            margin-top: 6px;
+        }
+
+        /* Sorting Table & Table Header Styles */
         .table-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
             padding: 24px;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .table-header-row {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
         }
+        
+        table { width: 100%; border-collapse: collapse; }
         th {
-            text-align: left;
-            padding: 12px 16px;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--card-border);
-            font-weight: 600;
+            text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted);
+            text-transform: uppercase; border-bottom: 1px solid var(--card-border); font-weight: 600;
         }
         td {
-            padding: 16px;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 16px; font-size: 13px; border-bottom: 1px solid var(--card-border);
         }
-        tr {
+        tr:last-child td { border-bottom: none; }
+
+        tbody tr {
             transition: background 0.15s ease;
+        }
+        tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        tbody tr.unresolved td:first-child {
+            border-left: 4px solid var(--error-red);
+            padding-left: 20px;
+        }
+        tbody tr.resolved td:first-child {
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 20px;
+        }
+        tbody tr.ignored td:first-child {
+            border-left: 4px solid #71717a;
+            padding-left: 20px;
+        }
+        tbody tr.ignored td { opacity: 0.55; }
+
+        .sortable-th {
             cursor: pointer;
+            user-select: none;
+            transition: color 0.15s;
         }
-        tr:hover td {
-            background: rgba(255,255,255,0.025);
+        .sortable-th:hover { color: var(--text-main); }
+
+        .sort-arrows {
+            display: inline-flex;
+            gap: 3px;
+            margin-left: 6px;
+            font-size: 15px;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        .sort-arrows span {
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+        .sort-arrows span.active-glow {
+            color: #3b82f6 !important;
+            font-weight: 800;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.95), 0 0 20px rgba(59, 130, 246, 0.6);
         }
 
-        tbody tr.fast td:first-child { border-left: 4px solid var(--success-green); padding-left: 20px; }
-        tbody tr.warn td:first-child { border-left: 4px solid var(--warning-orange); padding-left: 20px; }
-        tbody tr.slow td:first-child { border-left: 4px solid var(--error-red); padding-left: 20px; }
-
-        .method-tag {
-            padding: 3px 8px;
-            border-radius: 6px;
+        
+        /* Distinct Tech-Stack Framework Tag Color Palette */
+        
+        /* 100% Distinct Signature Tech-Stack Framework Tag Colors */
+        .tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: var(--radius-pill);
             font-size: 11px;
             font-weight: 700;
-            font-family: var(--font-mono);
+            font-family: var(--font-main);
+            letter-spacing: 0.02em;
         }
-        .method-get { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .method-post { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
-        .method-put { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .tag-react   { background: rgba(45, 212, 191, 0.14); border: 1px solid rgba(45, 212, 191, 0.35); color: #2dd4bf; } /* Mint Turquoise */
+        .tag-next    { background: rgba(226, 232, 240, 0.12); border: 1px solid rgba(226, 232, 240, 0.25); color: #e2e8f0; } /* Silver White */
+        .tag-api     { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; } /* Deep Purple */
+        .tag-backend { background: rgba(217, 70, 239, 0.15); border: 1px solid rgba(217, 70, 239, 0.35); color: #e879f9; } /* Fuchsia Magenta */
+        .tag-python  { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; } /* Indigo Violet */
+        .tag-go      { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; } /* Sky Blue */
+        .tag-auth    { background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.35); color: #f472b6; } /* Rose Pink */
 
-        .endpoint-name {
-            font-family: var(--font-mono);
-            font-weight: 600;
-            color: var(--text-main);
+        .tag {
+            display: inline-block;
+            padding: 2.5px 9px;
+            border-radius: var(--radius-pill);
+            font-size: 11px;
+            font-weight: 700;
+            font-family: var(--font-main);
+            letter-spacing: 0.02em;
         }
+        .tag-react   { background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.35); color: #22d3ee; }
+        .tag-next    { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; }
+        .tag-api     { background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; }
+        .tag-backend { background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; }
+
+        tbody tr.severity-critical td:first-child,
+        tbody tr.unresolved.critical td:first-child,
+        tbody tr.unresolved:first-child td:first-child {
+            border-left: 4px solid #ef4444;
+        }
+        tbody tr.severity-high td:first-child,
+        tbody tr.unresolved.high td:first-child {
+            border-left: 4px solid #f59e0b;
+        }
+        tbody tr.severity-medium td:first-child,
+        tbody tr.unresolved.medium td:first-child {
+            border-left: 4px solid #3b82f6;
+        }
+        tbody tr.severity-resolved td:first-child,
+        tbody tr.resolved td:first-child {
+            border-left: 4px solid #10b981;
+        }
+
+        .issue-title { font-weight: 600; color: var(--error-red); font-family: var(--font-mono); display: block; margin-bottom: 4px; }
+        .issue-loc { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); }
+
+        /* Modal Overlay for Alert & Ask Screen */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #0d0d11;
+            border: 1px solid var(--accent-blue);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.35);
+            border-radius: var(--radius-card);
+            padding: 28px;
+            max-width: 460px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .modal-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+        .modal-body { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
     
         /* ══════════════════════════════════════════════════════
            MOBILE TOP HEADER BAR (hidden on desktop)
@@ -922,7 +1278,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
-            <button class="hamburger-btn" id="mobHamBtn" onclick="toggleMobDrawer()" aria-label="Toggle navigation">
+            <button class="hamburger-btn" id="mobHamBtn" aria-label="Toggle navigation">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -931,7 +1287,7 @@
     </div>
 
     <!-- MOBILE SLIDE-IN DRAWER BACKDROP & DRAWER -->
-    <div class="mob-drawer-backdrop" id="mobDrawerBackdrop" onclick="closeMobDrawerOnBackdrop(event)">
+    <div class="mob-drawer-backdrop" id="mobDrawerBackdrop">
         <aside class="mob-drawer" id="mobDrawer">
             <div class="mob-drawer-top">
                 <a href="dashboard.html" class="mobile-brand">
@@ -943,7 +1299,7 @@
                     </svg>
                     <span>BugRadar<span style="color:#3b82f6;">.</span></span>
                 </a>
-                <button class="mob-drawer-close" onclick="toggleMobDrawer()" aria-label="Close drawer">
+                <button class="mob-drawer-close" aria-label="Close drawer">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -953,7 +1309,7 @@
 
             <nav class="mob-drawer-nav">
                 <div class="mob-nav-label">Navigation</div>
-                <a href="dashboard.html" class="mob-nav-item ">
+                <a href="dashboard.html" class="mob-nav-item active">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -969,9 +1325,9 @@
                         <line x1="12" y1="16" x2="12.01" y2="16"></line>
                     </svg>
                     <span>Issues</span>
-                    <span class="mob-nav-badge">142</span>
+                    <span class="mob-nav-badge">0</span>
                 </a>
-                <a href="performance.html" class="mob-nav-item active">
+                <a href="performance.html" class="mob-nav-item ">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                     </svg>
@@ -997,7 +1353,7 @@
                         <div class="mob-user-name">Shiza Ahsan</div>
                         <div class="mob-user-email">admin@bugradar.io</div>
                     </div>
-                    <a href="login.html" class="mob-signout" title="Sign Out">
+                    <a href="#" class="mob-signout" title="Sign Out" onclick="handleLogout(); return false;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
@@ -1008,7 +1364,7 @@
             </div>
         
         <div class="sidebar-footer-guide">
-            <button type="button" class="sidebar-color-guide-btn" onclick="toggleColorGuideModal()" title="View Color Scheme Differentiation Guide">
+            <button type="button" class="sidebar-color-guide-btn" title="View Color Scheme Differentiation Guide">
                 <div class="color-dots-group">
                     <span class="dot-mini dot-red"></span>
                     <span class="dot-mini dot-orange"></span>
@@ -1031,22 +1387,22 @@
         </a>
 
         <div class="sidebar-page-title">
-            <h2><span class="bold">Performance</span> <span class="light">Telemetry</span></h2>
-            <p>Monitor HTTP latency & API throughput</p>
+            <h2><span class="bold">Overview</span> <span class="light">Dashboard</span></h2>
+            <p><span id="sidebar-project-name"></span><span id="sidebar-greeting"></span></p>
         </div>
 
         <div class="nav-label">Main Menu</div>
         <ul class="nav-list">
-            <a href="dashboard.html" class="nav-item ">
+            <a href="dashboard.html" class="nav-item active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Dashboard
             </a>
             <a href="issues.html" class="nav-item ">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 Issues
-                <span class="nav-badge">12</span>
+                <span class="nav-badge">0</span>
             </a>
-            <a href="performance.html" class="nav-item active">
+            <a href="performance.html" class="nav-item ">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 Performance
             </a>
@@ -1065,7 +1421,7 @@
         </ul>
     
         <div class="sidebar-footer-guide">
-            <button type="button" class="sidebar-color-guide-btn" onclick="toggleColorGuideModal()" title="View Color Scheme Differentiation Guide">
+            <button type="button" class="sidebar-color-guide-btn" title="View Color Scheme Differentiation Guide">
                 <div class="color-dots-group">
                     <span class="dot-mini dot-red"></span>
                     <span class="dot-mini dot-orange"></span>
@@ -1080,164 +1436,203 @@
 
     <!-- MAIN CONTENT -->
     <main class="main-wrapper">
-        <div class="page-header">
-            <h1><span class="bold">API & Endpoint</span> <span class="light">Performance</span></h1>
-            <p>Track request latency percentiles, throughput spikes, and slow database queries.</p>
+
+        <!-- Breadcrumbs Navigation Path (Matching Issue Details Style) -->
+        <div class="breadcrumbs">
+            <a href="index.html">Projects</a>
+            <span class="separator">/</span>
+            <a href="dashboard.html" id="crumb-project">My Project</a>
+            <span class="separator">/</span>
+            <span class="current">Overview Dashboard</span>
         </div>
-
-        <!-- TOP METRICS -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <span class="metric-title">Apdex Score</span>
-                <div class="metric-val number-font" style="color:var(--success-green);">0.94</div>
-                <div class="metric-sub">94% Satisfied requests</div>
-            </div>
-            <div class="metric-card">
-                <span class="metric-title">Average Latency (P95)</span>
-                <div class="metric-val number-font" style="color:var(--text-main);">142ms</div>
-                <div class="metric-sub" style="color:var(--success-green);">-14ms vs yesterday</div>
-            </div>
-            <div class="metric-card">
-                <span class="metric-title">API Throughput</span>
-                <div class="metric-val number-font" style="color:var(--accent-blue);">1,280 tpm</div>
-                <div class="metric-sub" style="color:var(--text-muted);">21.3 req/sec</div>
-            </div>
-            <div class="metric-card">
-                <span class="metric-title">Slowest Route</span>
-                <div class="metric-val number-font" style="color:var(--error-red);">1.42s</div>
-                <div class="metric-sub" style="color:var(--error-red);">POST /api/analytics/export</div>
-            </div>
-        </div>
-
-        <!-- CONTROLS ROW -->
-        <div class="controls-row">
-            <div class="time-filters">
-                <button class="filter-pill-btn active" data-filter="all">All Endpoints</button>
-                <button class="filter-pill-btn" data-filter="slow">P95 > 500ms</button>
-                <button class="filter-pill-btn" data-filter="db">Slow DB Queries</button>
+        
+        <!-- Header -->
+        <header class="header">
+            <div class="header-pills">
+                <div class="pill-btn" id="header-project-pill">Project</div>
+                <div class="pill-btn">Env: All</div>
             </div>
 
-            <div class="search-bar">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="perfSearch" placeholder="Search API route or method...">
+            <!-- Search with dropdown -->
+            <div class="search-wrapper">
+                <div class="search-bar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="dashboardSearchInput" placeholder="Search for errors, tags, or users..." autocomplete="off">
+                </div>
+                <div class="search-dropdown" id="searchDropdown"></div>
             </div>
-        </div>
 
-        <!-- TRANSACTIONS TABLE -->
-        <div class="table-card">
-            <table id="perfTable">
-                <thead>
-                    <tr>
-                        <th>Endpoint / Transaction</th>
-                        <th>Method</th>
-                        <th>P95 Latency</th>
-                        <th>Throughput</th>
-                        <th>User Impact Score</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="slow">
-                        <td><span class="endpoint-name">POST /api/analytics/export</span></td>
-                        <td><span class="method-tag method-post">POST</span></td>
-                        <td class="number-font" style="color:var(--error-red); font-weight:700;">1.42s</td>
-                        <td class="number-font">42 tpm</td>
-                        <td class="number-font" style="color:var(--error-red);">High (124 users)</td>
-                    </tr>
-                    <tr class="warn">
-                        <td><span class="endpoint-name">GET /api/user/dashboard</span></td>
-                        <td><span class="method-tag method-get">GET</span></td>
-                        <td class="number-font" style="color:var(--warning-orange); font-weight:700;">480ms</td>
-                        <td class="number-font">820 tpm</td>
-                        <td class="number-font" style="color:var(--warning-orange);">Medium (340 users)</td>
-                    </tr>
-                    <tr class="fast">
-                        <td><span class="endpoint-name">GET /api/v1/health</span></td>
-                        <td><span class="method-tag method-get">GET</span></td>
-                        <td class="number-font" style="color:var(--success-green); font-weight:700;">14ms</td>
-                        <td class="number-font">2,410 tpm</td>
-                        <td class="number-font" style="color:var(--success-green);">Low (0 users)</td>
-                    </tr>
-                    <tr class="fast">
-                        <td><span class="endpoint-name">PUT /api/settings/profile</span></td>
-                        <td><span class="method-tag method-put">PUT</span></td>
-                        <td class="number-font" style="color:var(--success-green); font-weight:700;">95ms</td>
-                        <td class="number-font">180 tpm</td>
-                        <td class="number-font" style="color:var(--success-green);">Low (4 users)</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="user-actions">
+                <!-- Bell Icon → Alerts -->
+                <div class="icon-btn" title="Alerts">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </div>
+                <!-- Gear Icon → Settings -->
+                <div class="icon-btn" title="Settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </div>
+                <!-- Profile with dropdown -->
+                <div class="user-profile-wrap" id="profileWrap">
+                    <div class="user-profile">
+                        <div class="avatar">U</div>
+                        <div style="font-size: 13px; font-weight: 500;"><span class="user-name">User</span> &#9662;</div>
+                    </div>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <a href="settings.html" class="profile-drop-item">&#9881;&#65039; &nbsp;Account Settings</a>
+                        <a href="settings.html" class="profile-drop-item">&#128101; &nbsp;Team Members</a>
+                        <a href="#" class="profile-drop-item" style="color:#ef4444;" onclick="handleLogout(); return false;">&#128682; &nbsp;Sign Out</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="dashboard-grid">
+            
+            <!-- TOP KPI ROW -->
+            <div class="top-cards-row">
+                <!-- Big Card -->
+                <div class="main-kpi-card card">
+                    <div class="kpi-title-row">
+                        <span class="kpi-title">Total Error Events</span>
+                        <div style="position:relative;">
+                            <div class="pill-btn" id="kpiTimeBtn" style="padding:4px 10px; font-size:11px; cursor:default;">Last 30 days</div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="kpi-big-value" id="kpiBigValue">0</div>
+                        <div class="kpi-subtitle" id="kpi-subtitle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+                            <span id="kpi-subtitle-text">Events captured so far</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Small Cards -->
+                <div class="small-cards-container">
+                    <div class="small-card">
+                        <span class="kpi-title">Unresolved Issues</span>
+                        <div class="small-card-value text-error" id="stat-unresolved">0</div>
+                    </div>
+                    <div class="small-card">
+                        <span class="kpi-title">Resolved Issues</span>
+                        <div class="small-card-value" style="color:#10b981;" id="stat-resolved">0</div>
+                    </div>
+                    <div class="small-card">
+                        <span class="kpi-title">Total Issues</span>
+                        <div class="small-card-value" style="color:var(--text-main);" id="stat-total">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHART ROW -->
+            <div class="chart-card">
+                <div class="chart-header-row">
+                    <span class="kpi-title" style="font-size: 15px; color: var(--text-main); font-weight: 700;">Error Volume Over Time</span>
+                    <div class="time-filters">
+                        <button class="time-filter-btn active" data-range="7D">7D</button>
+                        <button class="time-filter-btn" data-range="30D">30D</button>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <!-- Dynamic Y Axis Labels -->
+                    <div class="y-axis" id="yAxis">
+                        <span>2,000</span>
+                        <span>1,500</span>
+                        <span>1,000</span>
+                        <span>500</span>
+                        <span>0</span>
+                    </div>
+
+                    <div class="chart-body">
+                        <div class="svg-chart-container" id="chartContainer">
+                            <!-- Dynamic SVG Graph -->
+                            <svg viewBox="0 0 1000 200" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+                                <defs>
+                                    <linearGradient id="blueArea" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
+                                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                                    </linearGradient>
+                                </defs>
+
+                                <!-- Grid lines -->
+                                <line x1="0" y1="10" x2="1000" y2="10" stroke="#1f1f26" stroke-dasharray="3,3"/>
+                                <line x1="0" y1="55" x2="1000" y2="55" stroke="#1f1f26" stroke-dasharray="3,3"/>
+                                <line x1="0" y1="100" x2="1000" y2="100" stroke="#1f1f26" stroke-dasharray="3,3"/>
+                                <line x1="0" y1="145" x2="1000" y2="145" stroke="#1f1f26" stroke-dasharray="3,3"/>
+                                <line x1="0" y1="190" x2="1000" y2="190" stroke="#1f1f26"/>
+
+                                <!-- Dynamic Area Fill Path -->
+                                <path id="chartArea" d="" fill="url(#blueArea)"/>
+
+                                <!-- Dynamic Main Line Stroke -->
+                                <path id="chartLine" d="" fill="none" stroke="#3b82f6" stroke-width="3" filter="drop-shadow(0 0 8px rgba(59,130,246,0.6))"/>
+
+                                <!-- Indicator Vertical Guide Line -->
+                                <line id="guideLine" x1="500" y1="0" x2="500" y2="200" stroke="#3b82f6" stroke-dasharray="3,3" opacity="0.6"/>
+
+                                <!-- Indicator Glow Point -->
+                                <circle id="guidePoint" cx="500" cy="80" r="6" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5"/>
+
+                                <!-- NATIVE SVG TOOLTIP TAG (100% Locked to guidePoint (cx, cy) on the Curve) -->
+                                <g id="svgTooltipGroup" transform="translate(500, 40)" style="transition: transform 0.05s ease-out; pointer-events: none;">
+                                    <rect id="svgTooltipBg" x="-65" y="-42" width="130" height="34" rx="8" ry="8" fill="#0d0d11" stroke="#3b82f6" stroke-width="1.5" filter="drop-shadow(0 0 12px rgba(59,130,246,0.6))"/>
+                                    <text id="svgTooltipTime" x="0" y="-26" text-anchor="middle" fill="#8a8f98" font-size="10" font-family="'Inter', sans-serif" font-weight="500">Wed 12:00 PM</text>
+                                    <text id="svgTooltipVal" x="0" y="-12" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Inter', sans-serif">1,204 Errors</text>
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- X Axis Labels -->
+                        <div class="x-axis" id="xAxis">
+                            <span>Mon</span>
+                            <span>Tue</span>
+                            <span>Wed</span>
+                            <span>Thu</span>
+                            <span>Fri</span>
+                            <span>Sat</span>
+                            <span>Sun</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECENT ISSUES TABLE ROW -->
+            <div class="table-card">
+                <div class="table-header-row">
+                    <span class="kpi-title" style="font-size: 15px; color: var(--text-main); font-weight: 700;">Recent Issues Overview</span>
+                    
+                    <div class="time-filters" id="statusFilterPills">
+                        <button class="table-pill-btn active" data-status="all">All</button>
+                        <button class="table-pill-btn" data-status="unresolved">Unresolved</button>
+                        <button class="table-pill-btn" data-status="resolved">Resolved</button>
+                    </div>
+                </div>
+
+                <table id="recentIssuesTable">
+                    <thead>
+                        <tr>
+                            <th>Error Message</th>
+                            <th>Status</th>
+                            <th class="sortable-th" data-col="events">
+                                EVENTS <span class="sort-arrows"><span class="arrow-up">&#9650;</span><span class="arrow-down">&#9660;</span></span>
+                            </th>
+                            <th class="sortable-th" data-col="time">
+                                LAST SEEN <span class="sort-arrows"><span class="arrow-up">&#9650;</span><span class="arrow-down">&#9660;</span></span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-issues-body">
+                        <tr><td colspan="4" style="text-align:center;padding:40px;color:var(--text-muted)">Loading recent issues…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
         </div>
     </main>
 
-    <script>
-        // Live search filter
-        const searchInput = document.getElementById('perfSearch');
-        const rows = document.querySelectorAll('#perfTable tbody tr');
-
-        if (searchInput) {
-            searchInput.addEventListener('input', () => {
-                const query = searchInput.value.toLowerCase().trim();
-                rows.forEach(r => {
-                    r.style.display = (!query || r.innerText.toLowerCase().includes(query)) ? '' : 'none';
-                });
-            });
-        }
-
-        // Filter pills
-        document.querySelectorAll('.filter-pill-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-pill-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const filter = btn.dataset.filter;
-
-                rows.forEach(r => {
-                    if (filter === 'all') r.style.display = '';
-                    else if (filter === 'slow') r.style.display = r.classList.contains('slow') ? '' : 'none';
-                    else if (filter === 'db') r.style.display = (r.classList.contains('slow') || r.classList.contains('warn')) ? '' : 'none';
-                });
-            });
-        });
-
-        // Row clicks
-        rows.forEach(r => {
-            r.addEventListener('click', () => {
-                alert('Opening transaction detail view for ' + r.querySelector('.endpoint-name').innerText);
-            });
-        });
-    
-
-        // ── MOBILE DRAWER CONTROLLER ──
-        function toggleMobDrawer() {
-            var backdrop = document.getElementById('mobDrawerBackdrop');
-            var btn = document.getElementById('mobHamBtn');
-            if (backdrop) {
-                var isOpen = backdrop.classList.toggle('open');
-                if (btn) {
-                    btn.classList.toggle('open', isOpen);
-                }
-                document.body.style.overflow = isOpen ? 'hidden' : '';
-            }
-        }
-
-        function closeMobDrawerOnBackdrop(e) {
-            if (e.target === document.getElementById('mobDrawerBackdrop')) {
-                toggleMobDrawer();
-            }
-        }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                var backdrop = document.getElementById('mobDrawerBackdrop');
-                if (backdrop && backdrop.classList.contains('open')) {
-                    toggleMobDrawer();
-                }
-            }
-        });
-
-    </script>
-
     <!-- COLOR SCHEME GUIDE MODAL -->
-    <div class="color-guide-modal" id="colorGuideModal" onclick="closeColorGuideOnBackdrop(event)">
+    <div class="color-guide-modal" id="colorGuideModal">
         <div class="color-guide-box">
             <div class="color-guide-header">
                 <h3>
@@ -1249,7 +1644,7 @@
                     </div>
                     BugRadar Color Scheme Guide
                 </h3>
-                <button class="color-guide-close" onclick="toggleColorGuideModal()">✕</button>
+                <button class="color-guide-close">✕</button>
             </div>
 
             <div class="guide-section-title">Severity & Status Differentiation</div>
@@ -1311,20 +1706,13 @@
         </div>
     </div>
 
-    <script>
-        function toggleColorGuideModal() {
-            var modal = document.getElementById('colorGuideModal');
-            if (modal) {
-                modal.classList.toggle('open');
-            }
-        }
-        function closeColorGuideOnBackdrop(e) {
-            if (e.target === document.getElementById('colorGuideModal')) {
-                toggleColorGuideModal();
-            }
-        }
-    </script>
+    
 
     <script src="app.js"></script>
+    <script src="dashboard.js"></script>
+
+    
+
+
 </body>
 </html>

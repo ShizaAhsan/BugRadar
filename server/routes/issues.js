@@ -1,12 +1,14 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { isUUID, parsePositiveInt, parseSince, mapSeverity, mapSort } = require('../validate');
 
 const router = express.Router();
 
 router.use(authenticate);
 
 async function checkProjectAccess(projectId, userId) {
+  if (!isUUID(projectId)) return null; // invalid UUID => not found, not 500 (QA-BUG-REPORT.md B11)
   const projectResult = await query('SELECT organization_id FROM projects WHERE id = $1', [projectId]);
   if (projectResult.rows.length === 0) return null;
 
@@ -20,6 +22,7 @@ async function checkProjectAccess(projectId, userId) {
 }
 
 async function checkIssueAccess(issueId, userId) {
+  if (!isUUID(issueId)) return null; // invalid UUID => not found, not 500 (QA-BUG-REPORT.md B11)
   const issueResult = await query(
     `SELECT i.id, p.organization_id FROM issues i
      JOIN projects p ON i.project_id = p.id WHERE i.id = $1`,
@@ -39,8 +42,12 @@ async function checkIssueAccess(issueId, userId) {
 router.get('/project/:projectId', async (req, res) => {
   try {
     const { projectId } = req.params;
-    const { status, environment, search, sort, page = 1, limit = 50 } = req.query;
-    const offset = (parseInt(page, 10) - 1) * parseInt(limit, 10);
+    // Support status/environment/time-range filters + severity + safe sort mapping
+    // (QA-BUG-REPORT.md B8); clamp pagination so NaN/negatives can't reach Postgres (B11)
+    const { status, environment, search, sort, severity, since } = req.query;
+    const limit = parsePositiveInt(req.query.limit, 50, 100);
+    const page = parsePositiveInt(req.query.page, 1);
+    const offset = (page - 1) * limit;
 
     const access = await checkProjectAccess(projectId, req.user.id);
     if (!access) {
@@ -56,22 +63,37 @@ router.get('/project/:projectId', async (req, res) => {
       params.push(status);
     }
 
+    const severityValue = mapSeverity(severity);
+    if (severityValue) {
+      whereClause += ` AND i.severity = $${paramIdx++}`;
+      params.push(severityValue);
+    }
+
+    if (environment) {
+      whereClause += ` AND EXISTS (SELECT 1 FROM events e WHERE e.issue_id = i.id AND e.environment = $${paramIdx++})`;
+      params.push(environment);
+    }
+
+    const sinceDate = parseSince(since);
+    if (sinceDate) {
+      whereClause += ` AND i.last_seen >= $${paramIdx++}`;
+      params.push(sinceDate);
+    }
+
     if (search) {
       whereClause += ` AND (i.title ILIKE $${paramIdx} OR i.culprit ILIKE $${paramIdx})`;
       params.push(`%${search}%`);
       paramIdx++;
     }
 
-    const orderBy = sort === 'first_seen' ? 'i.first_seen DESC'
-      : sort === 'count' ? 'i.event_count DESC'
-      : 'i.last_seen DESC';
+    const orderBy = mapSort(sort);
 
     const countResult = await query(
       `SELECT COUNT(*) FROM issues i ${whereClause}`,
       params
     );
 
-    params.push(parseInt(limit, 10), offset);
+    params.push(limit, offset);
     const result = await query(
       `SELECT i.*,
         u.name as assignee_name,
@@ -87,8 +109,8 @@ router.get('/project/:projectId', async (req, res) => {
     res.json({
       issues: result.rows,
       total: parseInt(countResult.rows[0].count, 10),
-      page: parseInt(page, 10),
-      limit: parseInt(limit, 10),
+      page,
+      limit,
     });
   } catch (err) {
     console.error('List issues error:', err);
@@ -300,13 +322,32 @@ router.post('/bulk', async (req, res) => {
       return res.status(400).json({ error: 'Maximum 100 issues per bulk operation' });
     }
 
-    // Check access for first issue to determine org
-    const firstAccess = await checkIssueAccess(issue_ids[0], req.user.id);
-    if (!firstAccess) {
-      return res.status(403).json({ error: 'Access denied' });
+    // Validate every id is a well-formed UUID (QA-BUG-REPORT.md B11)
+    if (!issue_ids.every(isUUID)) {
+      return res.status(400).json({ error: 'issue_ids must be valid UUIDs' });
     }
 
-    if (action === 'delete' && firstAccess.role === 'member') {
+    // Verify access + role for EVERY issue, not just the first — otherwise a caller
+    // could include other orgs' issue UUIDs after one of their own (QA-BUG-REPORT.md B3)
+    const accessResult = await query(
+      `SELECT i.id, m.role
+       FROM issues i
+       JOIN projects p ON i.project_id = p.id
+       JOIN memberships m ON m.organization_id = p.organization_id AND m.user_id = $2
+       WHERE i.id = ANY($1)`,
+      [issue_ids, req.user.id]
+    );
+
+    const requested = new Set(issue_ids);
+    const accessible = accessResult.rows;
+    if (accessible.length !== requested.size) {
+      return res.status(403).json({ error: 'Access denied to one or more issues' });
+    }
+
+    const accessibleIds = accessible.map(r => r.id);
+    const canDelete = accessible.every(r => r.role !== 'member');
+
+    if (action === 'delete' && !canDelete) {
       return res.status(403).json({ error: 'Only admins can delete issues' });
     }
 
@@ -314,14 +355,14 @@ router.post('/bulk', async (req, res) => {
     if (action === 'resolve') updateClause = "status = 'resolved'";
     else if (action === 'ignore') updateClause = "status = 'ignored'";
     else if (action === 'delete') {
-      await query('DELETE FROM events WHERE issue_id = ANY($1)', [issue_ids]);
-      await query('DELETE FROM issues WHERE id = ANY($1)', [issue_ids]);
-      return res.json({ message: `${issue_ids.length} issues deleted` });
+      await query('DELETE FROM events WHERE issue_id = ANY($1)', [accessibleIds]);
+      await query('DELETE FROM issues WHERE id = ANY($1)', [accessibleIds]);
+      return res.json({ message: `${accessibleIds.length} issues deleted` });
     }
     else return res.status(400).json({ error: 'Invalid action. Use: resolve, ignore, or delete' });
 
-    await query(`UPDATE issues SET ${updateClause}, updated_at = NOW() WHERE id = ANY($1)`, [issue_ids]);
-    res.json({ message: `${issue_ids.length} issues updated` });
+    await query(`UPDATE issues SET ${updateClause}, updated_at = NOW() WHERE id = ANY($1)`, [accessibleIds]);
+    res.json({ message: `${accessibleIds.length} issues updated` });
   } catch (err) {
     res.status(500).json({ error: 'Bulk update failed' });
   }

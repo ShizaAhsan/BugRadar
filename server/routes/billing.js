@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { isUUID } = require('../validate');
 const config = require('../config');
 
 const router = express.Router();
@@ -10,10 +11,14 @@ const router = express.Router();
 router.post('/webhook', async (req, res) => {
   try {
     const signature = req.headers['x-webhook-signature'];
-    const payload = JSON.stringify(req.body);
-    const expectedSig = crypto.createHmac('sha256', config.webhookSecret).update(payload).digest('hex');
+    // HMAC over the exact raw bytes received (QA-BUG-REPORT.md B12)
+    const raw = req.rawBody || Buffer.from(JSON.stringify(req.body));
+    const expectedSig = crypto.createHmac('sha256', config.webhookSecret).update(raw).digest('hex');
 
-    if (!signature || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig))) {
+    // timingSafeEqual throws on length mismatch -> guard first so bad sigs get 401, not 500 (B12)
+    const sigBuf = Buffer.from(String(signature || ''), 'utf8');
+    const expBuf = Buffer.from(expectedSig, 'utf8');
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       return res.status(401).json({ error: 'Invalid webhook signature' });
     }
 
@@ -61,6 +66,7 @@ router.post('/webhook', async (req, res) => {
 router.use(authenticate);
 
 async function checkOrgAccess(orgId, userId) {
+  if (!isUUID(orgId)) return null; // malformed id => no access (QA-BUG-REPORT.md B11)
   const membership = await query(
     'SELECT role FROM memberships WHERE user_id = $1 AND organization_id = $2',
     [userId, orgId]
@@ -82,7 +88,18 @@ router.get('/org/:orgId', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'No subscription found' });
+      // No subscription row yet: the implicit plan is free (PRD) — return defaults
+      // instead of a 404 that strands the billing UI (C5)
+      const freePlan = config.plans.free;
+      return res.json({
+        organization_id: req.params.orgId,
+        plan: 'free',
+        status: 'active',
+        events_used: 0,
+        current_period_end: null,
+        limits: freePlan,
+        usage_percentage: 0,
+      });
     }
 
     const sub = result.rows[0];

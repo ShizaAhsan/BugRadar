@@ -81,7 +81,8 @@ router.post('/signup', signupLimiter, async (req, res) => {
     const verificationToken = uuidv4();
 
     const result = await query(
-      'INSERT INTO users (email, password_hash, name, verification_token) VALUES ($1, $2, $3, $4) RETURNING id, email, name',
+      `INSERT INTO users (email, password_hash, name, verification_token, verification_expires_at)
+       VALUES ($1, $2, $3, $4, NOW() + INTERVAL '24 hours') RETURNING id, email, name`,
       [email.toLowerCase(), passwordHash, name, verificationToken]
     );
 
@@ -199,7 +200,10 @@ router.get('/verify-email', async (req, res) => {
     }
 
     const result = await query(
-      'UPDATE users SET email_verified = TRUE, verification_token = NULL WHERE verification_token = $1 RETURNING id',
+      `UPDATE users SET email_verified = TRUE, verification_token = NULL, verification_expires_at = NULL
+       WHERE verification_token = $1
+       AND (verification_expires_at IS NULL OR verification_expires_at > NOW())
+       RETURNING id`,
       [token]
     );
 
@@ -217,7 +221,7 @@ router.get('/verify-email', async (req, res) => {
 // Resend verification email
 router.post('/resend-verification', authenticate, async (req, res) => {
   try {
-    const user = await query('SELECT email, name, email_verified, verification_token FROM users WHERE id = $1', [req.user.id]);
+    const user = await query('SELECT email, name, email_verified, verification_token, verification_expires_at FROM users WHERE id = $1', [req.user.id]);
     if (user.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -227,9 +231,15 @@ router.post('/resend-verification', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'Email already verified' });
     }
 
-    const token = u.verification_token || uuidv4();
-    if (!u.verification_token) {
-      await query('UPDATE users SET verification_token = $1 WHERE id = $2', [token, req.user.id]);
+    // Rotate expired tokens; keep valid ones (QA-BUG-REPORT.md M16)
+    const expired = u.verification_expires_at && new Date(u.verification_expires_at) < new Date();
+    const token = (!u.verification_token || expired) ? uuidv4() : u.verification_token;
+    if (!u.verification_token || expired) {
+      await query(
+        `UPDATE users SET verification_token = $1, verification_expires_at = NOW() + INTERVAL '24 hours'
+         WHERE id = $2`,
+        [token, req.user.id]
+      );
     }
 
     const verifyUrl = `${config.cors.origin}/api/auth/verify-email?token=${token}`;

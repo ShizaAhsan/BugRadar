@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up — BugRadar™</title>
+    <title>Log In — BugRadar™</title>
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,34 +48,34 @@
     </nav>
 
     <!-- ================================================================= -->
-    <!-- CENTER SIGN UP CARD                                               -->
+    <!-- CENTER LOGIN CARD                                                 -->
     <!-- ================================================================= -->
-    <main class="main-container" style="max-width: 440px; padding-top: 40px; padding-bottom: 40px;">
+    <main class="main-container">
         <div class="card-box">
             
             <!-- Card Header -->
             <div class="card-header">
-                <h1 class="card-title">Create your account</h1>
-                <p class="card-subtitle">Performance meets scale. Get started with error tracking in under 2 minutes.</p>
+                <h1 class="card-title">Log In to BugRadar</h1>
+                <p class="card-subtitle">Performance meets scale. Enter your credentials to access your workspace.</p>
             </div>
 
-            <!-- Sign Up Form -->
-            <form id="signup-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <!-- Login Form -->
+            <form id="login-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
                 
-                <!-- Full Name Field -->
+                <!-- Email Field -->
                 <div class="form-group">
-                    <label for="fullname" class="form-label">Full Name</label>
+                    <label for="email" class="form-label">Your Email</label>
                     <div class="input-wrapper">
                         <input 
-                            type="text" 
-                            id="fullname" 
-                            name="fullname" 
+                            type="email" 
+                            id="email" 
+                            name="email" 
                             class="form-input" 
-                            placeholder="Sarah Jenkins" 
+                            placeholder="name@company.com" 
                             required 
-                            autocomplete="name"
+                            autocomplete="email"
                         >
-                        <span class="input-icon-btn" title="Full Name">
+                        <span class="input-icon-btn" title="User Email">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
@@ -84,57 +84,9 @@
                     </div>
                 </div>
 
-                <!-- Work Email Field -->
-                <div class="form-group">
-                    <label for="email" class="form-label">Work Email</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            class="form-input" 
-                            placeholder="sarah@company.com" 
-                            required 
-                            autocomplete="email"
-                        >
-                        <span class="input-icon-btn" title="Work Email">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Organization Name Field -->
-                <div class="form-group">
-                    <label for="orgname" class="form-label">Organization Name</label>
-                    <div class="input-wrapper">
-                        <input 
-                            type="text" 
-                            id="orgname" 
-                            name="orgname" 
-                            class="form-input" 
-                            placeholder="Acme Corp" 
-                            required
-                        >
-                        <span class="input-icon-btn" title="Organization">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                                <rect width="16" height="20" x="4" y="2" rx="2" ry="2"></rect>
-                                <path d="M9 22v-4h6v4"></path>
-                                <path d="M8 6h.01"></path>
-                                <path d="M16 6h.01"></path>
-                                <path d="M12 6h.01"></path>
-                                <path d="M8 10h.01"></path>
-                                <path d="M8 14h.01"></path>
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-
                 <!-- Password Field -->
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
+                    <label for="password" class="form-label">Your Password</label>
                     <div class="input-wrapper">
                         <input 
                             type="password" 
@@ -143,44 +95,40 @@
                             class="form-input" 
                             placeholder="••••••••••••" 
                             required 
-                            autocomplete="new-password"
-                            oninput="updatePasswordStrength(this.value)"
+                            autocomplete="current-password"
                         >
-                        <button type="button" class="input-icon-btn" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility">
+                        <button type="button" class="input-icon-btn" id="password-toggle" aria-label="Toggle password visibility">
                             <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
                     </div>
-                    <!-- Password strength meter (styles in style.css) -->
-                    <div class="password-strength-bar">
-                        <div class="password-strength-fill" id="strength-fill"></div>
-                    </div>
                 </div>
 
-                <!-- Terms and Privacy Checkbox -->
-                <div class="terms-row">
-                    <input type="checkbox" id="terms" class="terms-checkbox" required>
-                    <label for="terms">
-                        I agree to BugRadar's <a href="#" class="terms-link">Terms of Service</a> and <a href="#" class="terms-link">Privacy Policy</a>.
+                <!-- Remember Me & Forgot Password Row -->
+                <div class="options-row">
+                    <label class="remember-me">
+                        <input type="checkbox" id="remember" class="remember-checkbox" checked>
+                        <span>Remember me</span>
                     </label>
+                    <span class="forgot-link" style="opacity: 0.6; cursor: default;" title="Password reset is not available in this version">Forgotten?</span>
                 </div>
 
-                <!-- Primary Create Account CTA -->
-                <button type="submit" class="btn-primary" id="signup-btn">
-                    <span>Create Account & Workspace</span>
+                <!-- Primary Log In CTA -->
+                <button type="submit" class="btn-primary" id="login-btn">
+                    <span>Log In</span>
                 </button>
             </form>
 
             <!-- Divider -->
             <div class="divider">
-                <span>Already have an account?</span>
+                <span>Don't have an account?</span>
             </div>
 
-            <!-- Secondary Log In Button Link -->
-            <a href="login.html" class="btn-secondary">
-                Log In
+            <!-- Secondary Sign Up Button Link -->
+            <a href="signup.html" class="btn-secondary">
+                Sign Up
             </a>
 
         </div>

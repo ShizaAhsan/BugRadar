@@ -90,8 +90,8 @@ function selectPlatform(element, platformKey) {
 
 function updateCodeSnippet(platform) {
     const codeDisplay = document.getElementById('code-display');
-    const dsnVal = document.getElementById('dsn-value')?.innerText || 'https://b892a0e2a8@ingest.bugradar.io/proj_9801';
-    
+    // Show an obvious placeholder until the real project DSN exists — never a fake DSN
+    const dsnVal = document.getElementById('dsn-value')?.innerText || 'YOUR_DSN_KEY_HERE';
     if (!codeDisplay) return;
 
     if (platform === 'javascript' || platform === 'react') {
@@ -138,49 +138,9 @@ bugradar.<span class="code-function">init</span>(
 }
 
 /* --------------------------------------------------------------------------
-   5. ONBOARDING STEP TRANSITION (DEPRECATED - use handleOnboardingSubmit from app.js)
+   5. ONBOARDING TEST EVENT (real POST to the ingestion endpoint)
    -------------------------------------------------------------------------- */
-function handleCreateProject(event) {
-    // Redirect to the real handler in app.js
-    if (typeof handleOnboardingSubmit === 'function') {
-        return handleOnboardingSubmit(event);
-    }
-    // Fallback: original mock behavior
-    event.preventDefault();
-    const orgName = document.getElementById('orgname-input').value;
-    const projName = document.getElementById('projname-input').value;
-    
-    if (!orgName || !projName) {
-        alert('Please fill in both Organization and Project names.');
-        return;
-    }
-
-    // Hide Step 1 Form, Show Step 2 DSN Integration View
-    const step1View = document.getElementById('step-1-view');
-    const step2View = document.getElementById('step-2-view');
-    const step1Indicator = document.getElementById('indicator-step-1');
-    const step2Indicator = document.getElementById('indicator-step-2');
-
-    if (step1View && step2View) {
-        step1View.style.display = 'none';
-        step2View.style.display = 'flex';
-        step2View.style.flexDirection = 'column';
-        
-        step1Indicator.classList.remove('active');
-        step1Indicator.classList.add('completed');
-        step2Indicator.classList.add('active');
-
-        // Set generated DSN
-        const hash = Math.random().toString(36).substring(2, 12);
-        const dsnBox = document.getElementById('dsn-value');
-        if (dsnBox) {
-            dsnBox.innerText = `https://${hash}@ingest.bugradar.io/proj_${Math.floor(1000 + Math.random() * 9000)}`;
-        }
-        updateCodeSnippet(selectedPlatform);
-    }
-}
-
-function simulateTestErrorEvent() {
+async function simulateTestErrorEvent() {
     const radarDot = document.getElementById('radar-dot');
     const statusText = document.getElementById('polling-text-status');
     const testBtn = document.getElementById('test-event-btn');
@@ -190,10 +150,26 @@ function simulateTestErrorEvent() {
     testBtn.innerText = 'Dispatching Error...';
     testBtn.disabled = true;
 
-    // Send a real test error to the ingestion endpoint
+    // Send a real test error to the ingestion endpoint and check the real response
     const dsnVal = document.getElementById('dsn-value')?.innerText;
-    if (dsnVal && dsnVal.includes('ingest')) {
-        fetch(dsnVal, {
+    const showFailure = (reason) => {
+        if (radarDot) {
+            radarDot.style.backgroundColor = 'var(--color-danger)';
+            radarDot.style.boxShadow = '0 0 12px var(--color-danger)';
+        }
+        statusText.innerHTML = '<span style="color: var(--color-danger); font-weight: 600;">✗ Test event failed: ' + reason + '</span>';
+        testBtn.innerText = 'Retry Test Event';
+        testBtn.disabled = false;
+        testBtn.style.borderColor = '';
+        testBtn.style.color = '';
+    };
+
+    if (!dsnVal || !dsnVal.includes('/ingest/')) {
+        return showFailure('no DSN available for this project');
+    }
+
+    try {
+        const res = await fetch(dsnVal, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -216,10 +192,13 @@ function simulateTestErrorEvent() {
                 ],
                 tags: { browser: 'Chrome 120', os: 'Windows 10' }
             })
-        }).catch(() => {});
-    }
+        });
 
-    setTimeout(() => {
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => null);
+            return showFailure(errBody?.error || ('server responded ' + res.status));
+        }
+
         if (radarDot) {
             radarDot.style.backgroundColor = 'var(--color-success)';
             radarDot.style.boxShadow = '0 0 12px var(--color-success)';
@@ -229,7 +208,9 @@ function simulateTestErrorEvent() {
         testBtn.innerText = '✓ Event Captured!';
         testBtn.style.borderColor = 'var(--color-success)';
         testBtn.style.color = 'var(--color-success)';
-    }, 1200);
+    } catch (err) {
+        showFailure(err.message || 'network error');
+    }
 }
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -272,12 +253,26 @@ document.addEventListener('DOMContentLoaded', () => {
         testEventBtn.addEventListener('click', simulateTestErrorEvent);
     }
 
-    // Back to project form
+    // Back to project form — switch views in place instead of reloading the
+    // page, which wiped everything the user had typed (M14)
     const backProjectBtn = document.getElementById('back-project-btn');
 
     if (backProjectBtn) {
         backProjectBtn.addEventListener('click', () => {
-            location.reload();
+            const step1View = document.getElementById('step-1-view');
+            const step2View = document.getElementById('step-2-view');
+            const step1Indicator = document.getElementById('indicator-step-1');
+            const step2Indicator = document.getElementById('indicator-step-2');
+            if (step1View && step2View) {
+                step2View.style.display = 'none';
+                step1View.style.display = 'flex';
+                step1View.style.flexDirection = 'column';
+                if (step2Indicator) step2Indicator.classList.remove('active');
+                if (step1Indicator) {
+                    step1Indicator.classList.remove('completed');
+                    step1Indicator.classList.add('active');
+                }
+            }
         });
     }
 

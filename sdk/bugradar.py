@@ -52,8 +52,15 @@ class BugRadar:
         return self
 
     def capture_exception(self, exc_info=None, **kwargs):
-        if exc_info is None:
+        # Accept an exception instance (the documented usage), an
+        # (type, value, tb) tuple, or nothing for the in-flight exception (S6) —
+        # passing an instance used to crash with TypeError on exc_info[0].
+        if isinstance(exc_info, BaseException):
+            exc_info = (type(exc_info), exc_info, exc_info.__traceback__)
+        elif exc_info is None:
             exc_info = sys.exc_info()
+        elif not isinstance(exc_info, tuple) or len(exc_info) != 3:
+            return None
 
         if exc_info[0] is None:
             return None
@@ -174,12 +181,13 @@ class BugRadar:
             frame = tb.tb_frame
             filename = frame.f_code.co_filename
             if "bugradar" not in filename.lower():
+                # Frame locals are deliberately not uploaded — they routinely
+                # contain secrets/tokens and end up persisted in
+                # events.stack_trace (S6)
                 frames.append({
                     "filename": filename,
                     "lineno": tb.tb_lineno,
                     "function": frame.f_code.co_name,
-                    "locals": {k: str(v)[:200] for k, v in frame.f_locals.items()
-                               if not k.startswith("_")},
                 })
             tb = tb.tb_next
 
@@ -192,7 +200,12 @@ class BugRadar:
     def _send(self, payload):
         payload["sdk"] = {"name": "bugradar-python", "version": "1.0.0"}
 
-        store_url = self.dsn.rstrip("/") + "/store/"
+        # Tolerate DSNs pasted with a trailing /store (the JS SDKs strip it
+        # too) — otherwise we'd POST to /store/store/ and get a 404 (S6)
+        base = self.dsn
+        if base.endswith("/store"):
+            base = base[: -len("/store")]
+        store_url = base.rstrip("/") + "/store/"
         data = json.dumps(payload).encode("utf-8")
 
         try:

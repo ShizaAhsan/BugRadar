@@ -60,6 +60,21 @@ router.post('/:dsnKey/store/', async (req, res) => {
 
     // Parse event payload
     const payload = req.body;
+
+    // Ignore payloads that contain neither a message nor an exception (e.g. stray
+    // session/heartbeat events) so they can never create "Unknown error" junk issues
+    // or burn event quota (QA-BUG-REPORT.md S1)
+    const hasMessage = typeof payload.message === 'string' && payload.message.trim().length > 0;
+    const hasException = !!(
+      payload.exception?.values?.length ||
+      payload.exception?.frames?.length ||
+      payload.stacktrace?.frames?.length ||
+      payload.stacktrace?.values?.length
+    );
+    if (!hasMessage && !hasException) {
+      return res.status(202).json({ ignored: true });
+    }
+
     const event = {
       message: payload.message || payload.exception?.values?.[0]?.value || 'Unknown error',
       stackTrace: normalizeStackTrace(payload.exception || payload.stacktrace || null),
@@ -87,14 +102,18 @@ router.post('/:dsnKey/store/', async (req, res) => {
     let isNewIssue = false;
     if (issueResult.rows.length > 0) {
       issue = issueResult.rows[0];
+      // Auto-reopen regressions: a new event on a resolved issue returns it to
+      // unresolved (QA-BUG-REPORT.md B6 / AppFlow §7). Ignored stays ignored.
       await query(
         `UPDATE issues SET
           last_seen = NOW(),
           event_count = event_count + 1,
+          status = CASE WHEN status = 'resolved' THEN 'unresolved' ELSE status END,
           updated_at = NOW()
          WHERE id = $1`,
         [issue.id]
       );
+      if (issue.status === 'resolved') issue.status = 'unresolved';
     } else {
       isNewIssue = true;
       const culprit = extractCulprit(event.stackTrace);
@@ -104,17 +123,6 @@ router.post('/:dsnKey/store/', async (req, res) => {
         [project.id, event.message.slice(0, 500), culprit, fingerprintHash, event.severity]
       );
       issue = issueResult.rows[0];
-    }
-
-    // Update user count if user context has an ID
-    if (event.userContext?.id) {
-      await query(
-        `UPDATE issues SET user_count = (
-          SELECT COUNT(DISTINCT user_context->>'id')
-          FROM events WHERE issue_id = $1 AND user_context->>'id' IS NOT NULL
-        ) WHERE id = $1`,
-        [issue.id]
-      );
     }
 
     // Insert event
@@ -138,6 +146,18 @@ router.post('/:dsnKey/store/', async (req, res) => {
         JSON.stringify(payload),
       ]
     );
+
+    // Recompute affected users AFTER inserting the current event so the first event
+    // from a user is counted immediately (QA-BUG-REPORT.md B9)
+    if (event.userContext?.id) {
+      await query(
+        `UPDATE issues SET user_count = (
+          SELECT COUNT(DISTINCT user_context->>'id')
+          FROM events WHERE issue_id = $1 AND user_context->>'id' IS NOT NULL
+        ) WHERE id = $1`,
+        [issue.id]
+      );
+    }
 
     // Increment events_used
     if (sub) {
@@ -218,6 +238,9 @@ function normalizeStackTrace(st) {
 }
 
 async function evaluateAlertRules(project, issue, event, isNewIssue) {
+  // Never alert on resolved/ignored issues (QA-BUG-REPORT.md B5 / AppFlow §7)
+  if (issue.status && issue.status !== 'unresolved') return;
+
   const rules = await query(
     'SELECT * FROM alert_rules WHERE project_id = $1 AND enabled = TRUE',
     [project.id]
@@ -254,6 +277,19 @@ async function evaluateAlertRules(project, issue, event, isNewIssue) {
     }
 
     if (shouldAlert) {
+      // Cooldown: don't re-fire the same rule for the same issue more often than the
+      // rule's own window — prevents one spike from sending an email per event (B5)
+      if (rule.window_minutes) {
+        const recentFired = await query(
+          `SELECT 1 FROM alert_history
+           WHERE alert_rule_id = $1 AND issue_id = $2
+           AND triggered_at > NOW() - ($3::int * INTERVAL '1 minute')
+           LIMIT 1`,
+          [rule.id, issue.id, rule.window_minutes]
+        );
+        if (recentFired.rows.length > 0) continue;
+      }
+
       await query(
         `INSERT INTO alert_history (alert_rule_id, issue_id, channel, details, status)
          VALUES ($1, $2, $3, $4, $5)`,

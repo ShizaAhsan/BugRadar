@@ -48,8 +48,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        run: npm test
+      # D5: the old CI ran `npm test` (an echo) — provision the database and a
+      # live server, then run the actual integration suite.
+      - name: Run database migrations
+        run: npm run migrate
         env:
           DB_HOST: localhost
           DB_PORT: 5432
@@ -58,12 +60,71 @@ jobs:
           DB_NAME: bugradar_test
           REDIS_HOST: localhost
           REDIS_PORT: 6379
-          JWT_ACCESS_SECRET: test-access-secret
-          JWT_REFRESH_SECRET: test-refresh-secret
+          JWT_ACCESS_SECRET: test-access-secret-0123456789abcdef0123456789
+          JWT_REFRESH_SECRET: test-refresh-secret-0123456789abcdef0123456789
+
+      - name: Seed demo data
+        run: npm run seed
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: bugradar
+          DB_PASSWORD: test_password
+          DB_NAME: bugradar_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_ACCESS_SECRET: test-access-secret-0123456789abcdef0123456789
+          JWT_REFRESH_SECRET: test-refresh-secret-0123456789abcdef0123456789
+
+      - name: Start server
+        run: |
+          node server/index.js > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health > /dev/null 2>&1; then
+              echo "Server healthy"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start:"
+          cat server.log
+          exit 1
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: bugradar
+          DB_PASSWORD: test_password
+          DB_NAME: bugradar_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_ACCESS_SECRET: test-access-secret-0123456789abcdef0123456789
+          JWT_REFRESH_SECRET: test-refresh-secret-0123456789abcdef0123456789
+          WEBHOOK_SECRET: test-webhook-secret-0123456789abcdef01234567
+
+      - name: Run integration tests
+        run: npm test
+        env:
+          BASE_URL: http://localhost:3000
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: bugradar
+          DB_PASSWORD: test_password
+          DB_NAME: bugradar_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_ACCESS_SECRET: test-access-secret-0123456789abcdef0123456789
+          JWT_REFRESH_SECRET: test-refresh-secret-0123456789abcdef0123456789
+
+      - name: Server log on failure
+        if: failure()
+        run: cat server.log || true
 
   deploy:
     needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    # Only deploy from the canonical repository, where SERVER_HOST/SERVER_USER/
+    # SERVER_KEY secrets are configured. Forks have no (and can never inherit)
+    # those secrets, so the ssh action would fail with "missing server host".
+    if: github.repository == 'ShizaAhsan/BugRadar' && github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -91,10 +152,22 @@ jobs:
             echo "Checking container status..."
             docker compose ps
 
+            # The production stack does not publish the app port (nginx fronts
+            # it on 80/443), and a plain HTTP request to port 80 is answered by
+            # nginx's 301 redirect — which curl -f counts as success. Poll the
+            # app's real health endpoint (verifies DB + Redis) instead.
             echo "Waiting for application health..."
-            sleep 10
-
-            echo "Checking application health..."
-            curl -f http://localhost/api/health
+            for i in $(seq 1 30); do
+              if docker compose exec -T app wget -qO- http://localhost:3000/api/health 2>/dev/null | grep -q '"status":"ok"'; then
+                echo "Application healthy!"
+                break
+              fi
+              if [ "$i" = "30" ]; then
+                echo "Application failed to become healthy"
+                docker compose logs --tail=50 app
+                exit 1
+              fi
+              sleep 2
+            done
 
             echo "Deployment successful!"

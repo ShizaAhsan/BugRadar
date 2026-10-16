@@ -42,13 +42,31 @@ Fill in:
 - `JWT_REFRESH_SECRET` — different 128-char hex string
 - `WEBHOOK_SECRET` — 64-char hex string
 - `CORS_ORIGIN` — your domain, e.g., `https://bugradar.yourdomain.com`
-- SMTP credentials (optional, for email alerts)
+- SMTP credentials (optional, for email alerts) — `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+
+> **Warning:** the values shipped in `.env.production.example` are placeholders.
+> In production mode the server refuses to boot (`server/config.js`) unless
+> `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `DB_PASSWORD` and `WEBHOOK_SECRET`
+> are each set to at least 32 characters — replace every placeholder with the
+> generated values from step 2.
 
 ### 4. Start services
 
 ```bash
 docker compose up -d
 ```
+
+`docker-compose.yml` runs the same three services version one deployed:
+the app, Redis and nginx (80/443). **PostgreSQL is external** — point
+`DB_HOST`/`DB_PORT`/`DB_USER`/`DB_PASSWORD`/`DB_NAME` in `.env` at your
+database host, exactly as in version one. For a self-contained local stack
+that bundles PostgreSQL and needs no certificates, use the alternate file:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
+
+That variant proxies plain HTTP on port 80 through `nginx.local.conf`.
 
 ### 5. Run migrations
 
@@ -59,40 +77,41 @@ docker compose exec app node server/migrations/seed.js  # optional: demo data
 
 ### 6. Verify
 
+The app port is not published in the production stack (nginx fronts it on
+80/443), so check health from inside the container:
+
 ```bash
-curl http://localhost:3000/api/health
+docker compose exec app wget -qO- http://localhost:3000/api/health
 ```
 
 ---
 
 ## SSL Setup with Let's Encrypt
 
-### 1. Install certbot on host
+`nginx.conf` always serves HTTPS and reads the certificates directly from
+`/etc/letsencrypt/live/<domain>/` — `docker-compose.yml` mounts the host's
+`/etc/letsencrypt` directory read-only into the nginx container. There is no
+separate cert-copy step and no commented-out block to enable; before the
+certificates exist, the nginx container will restart-loop (the app and Redis
+keep running, but nothing is served until certificates are obtained).
+
+### 1. Update `nginx.conf`
+
+Set `server_name` to your domain in both server blocks (HTTP and HTTPS).
+
+### 2. Install certbot on host
 
 ```bash
 sudo apt install certbot
 ```
 
-### 2. Get certificate (stop nginx first)
+### 3. Get certificate (stop anything on port 80 first)
 
 ```bash
-sudo certbot certonly --standalone -d yourdomain.com -d www.yourdomain.com
+sudo certbot certonly --standalone -d yourdomain.com
 ```
 
-### 3. Copy certs to project
-
-```bash
-mkdir -p ssl
-sudo cp /etc/letsencrypt/live/yourdomain.com/fullchain.pem ssl/
-sudo cp /etc/letsencrypt/live/yourdomain.com/privkey.pem ssl/
-sudo chown -R $USER:$USER ssl/
-```
-
-### 4. Uncomment HTTPS block in `nginx.conf`
-
-Edit the HTTPS server block and update `server_name` to your domain.
-
-### 5. Restart
+### 4. Restart
 
 ```bash
 docker compose restart nginx
@@ -169,8 +188,13 @@ pm2 save
 | `SMTP_PORT` | No | SMTP port (default: 587) |
 | `SMTP_USER` | No | SMTP username |
 | `SMTP_PASS` | No | SMTP password |
+| `SMTP_FROM` | No | From-address for alert emails |
 | `CORS_ORIGIN` | Yes | Your production domain URL |
 | `WEBHOOK_SECRET` | Yes | Min 32 chars. Generate: `openssl rand -hex 32` |
+| `DB_ADMIN_HOST` | No | Admin host for `npm run setup-db` (default: localhost) |
+| `DB_ADMIN_PORT` | No | Admin port for `npm run setup-db` (default: 5432) |
+| `DB_ADMIN_USER` | No | Admin user for `npm run setup-db` (default: postgres) |
+| `DB_ADMIN_PASSWORD` | No | Admin password for `npm run setup-db` (default: postgres) |
 
 ---
 
@@ -184,23 +208,26 @@ pm2 save
 
 ## Backups
 
+PostgreSQL runs outside the compose stack in production (same as version
+one), so back it up from the database host (or any machine that can reach it):
+
 ### PostgreSQL
 
 ```bash
-docker compose exec postgres pg_dump -U bugradar bugradar > backup_$(date +%Y%m%d).sql
+pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" > backup_$(date +%Y%m%d).sql
 ```
 
 ### Restore
 
 ```bash
-cat backup.sql | docker compose exec -T postgres psql -U bugradar bugradar
+psql -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" < backup.sql
 ```
 
 ### Automated backup cron
 
 ```bash
-# Add to crontab (daily at 2 AM)
-0 2 * * * docker compose exec -T postgres pg_dump -U bugradar bugradar | gzip > /backups/bugradar_$(date +\%Y\%m\%d).sql.gz
+# Add to crontab on the database host (daily at 2 AM)
+0 2 * * * pg_dump -h "$DB_HOST" -U "$DB_USER" "$DB_NAME" | gzip > /backups/bugradar_$(date +\%Y\%m\%d).sql.gz
 ```
 
 ---
@@ -223,3 +250,5 @@ For multiple instances:
 | `ECONNREFUSED` to Redis | Ensure Redis is running: `docker compose ps` |
 | Health check returns `degraded` | Check DB/Redis connectivity logs |
 | Port 3000 already in use | Change `PORT` in `.env` or stop the conflicting process |
+| nginx restart-looping | Certificates missing — obtain them with the SSL steps above, or use `docker-compose.local.yml` (HTTP only) |
+| Server exits on boot in production | A placeholder secret is still in `.env` — see the warning in Quick Start |
