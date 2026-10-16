@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BugRadar™ - Project Settings</title>
+    <title>BugRadar™ - Alert History & Incidents</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,9 +24,8 @@
             --accent-blue-hover: #2563eb;
             --accent-cyan: #06b6d4;
             --error-red: #ef4444;
-            --error-red-bg: rgba(239, 68, 68, 0.1);
             --success-green: #10b981;
-            --warning-yellow: #ca8a04;
+            --warning-orange: #f59e0b;
             
             --radius-card: 20px;
             --radius-pill: 50px;
@@ -78,6 +77,7 @@
             margin-bottom: 30px;
             color: var(--text-main);
             text-decoration: none;
+            font-family: var(--font-main);
         }
 
         .sidebar-page-title {
@@ -126,21 +126,23 @@
             padding: 10px 14px;
             border-radius: 12px;
             color: var(--text-muted);
-            text-decoration: none;
             font-size: 13px;
             font-weight: 600;
             transition: all 0.15s ease;
+            text-decoration: none;
         }
 
         .nav-item:hover {
-            background: rgba(255, 255, 255, 0.04);
             color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .nav-item.active {
             background: rgba(59, 130, 246, 0.15);
             color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 14px rgba(59, 130, 246, 0.35);
+            font-weight: 600;
         }
 
         /* --- MAIN WRAPPER --- */
@@ -154,225 +156,164 @@
         }
 
         .page-header {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
         .page-header h1 {
             font-size: 26px;
-            font-weight: 800;
-            line-height: 1.25;
+            line-height: 1.3;
             margin-bottom: 6px;
         }
-        .page-header h1 .bold { color: #ffffff; }
-        .page-header h1 .light { color: rgba(255,255,255,0.45); font-weight: 400; }
+        .page-header h1 .bold { font-weight: 800; color: #ffffff; }
+        .page-header h1 .light { font-weight: 400; color: rgba(255, 255, 255, 0.45); }
         .page-header p {
             font-size: 14px;
             color: var(--text-muted);
         }
 
-        /* Settings Grid Layout */
-        .settings-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 28px;
-            max-width: 900px;
+        /* Metric Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
         }
 
-        .settings-card {
+        .metric-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-card);
-            padding: 28px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-
-        .card-header {
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 16px;
-        }
-        .card-title {
-            font-size: 17px;
-            letter-spacing: 0.02em;
-        }
-        .card-title .bold { font-weight: 800; color: #ffffff; }
-        .card-title .light { font-weight: 400; color: rgba(255,255,255,0.45); }
-        .card-desc {
+        .metric-title {
             font-size: 13px;
             color: var(--text-muted);
-            margin-top: 4px;
+            font-weight: 500;
         }
-
-        /* Form Fields */
-        .form-group {
-            margin-bottom: 20px;
+        .metric-val {
+            font-size: 26px;
+            font-weight: 700;
+            margin-top: 12px;
+            margin-bottom: 4px;
         }
-        .form-group:last-child {
-            margin-bottom: 0;
-        }
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            color: var(--text-main);
-            font-size: 13px;
-            outline: none;
-            transition: border 0.15s;
-        }
-        .form-input:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .dsn-copy-box {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .dsn-copy-box input {
-            font-family: var(--font-mono);
-            color: #60a5fa;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: all 0.15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary {
-            background: var(--accent-blue);
-            color: #ffffff;
-        }
-        .btn-primary:hover {
-            background: var(--accent-blue-hover);
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-        }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            color: var(--text-main);
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.09);
-        }
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            color: #f87171;
-        }
-        .btn-danger:hover {
-            background: rgba(239, 68, 68, 0.25);
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Toggle Switch */
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .toggle-row:last-child {
-            border-bottom: none;
-        }
-        .toggle-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .toggle-info p {
+        .metric-sub {
             font-size: 12px;
             color: var(--text-muted);
-            margin-top: 2px;
         }
 
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
+        /* Controls Row */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 16px;
         }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(255, 255, 255, 0.1);
-            transition: .3s;
-            border-radius: 24px;
+
+        .time-filters {
+            display: flex;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px;
+            border-radius: var(--radius-pill);
             border: 1px solid var(--card-border);
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .3s;
-            border-radius: 50%;
+        .filter-pill-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 16px;
+            border-radius: var(--radius-pill);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-number);
+            outline: none;
         }
-        input:checked + .slider {
-            background-color: var(--accent-blue);
-        }
-        input:checked + .slider:before {
-            transform: translateX(20px);
+        .filter-pill-btn.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
 
-        /* Team Table */
-        .team-table {
+        .search-bar {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            width: 300px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .search-bar input {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            outline: none;
+            width: 100%;
+            font-size: 13px;
+        }
+
+        /* Table Card */
+        .table-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 24px;
+        }
+
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 12px;
         }
-        .team-table th {
+        th {
             text-align: left;
+            padding: 12px 16px;
             font-size: 11px;
-            text-transform: uppercase;
             color: var(--text-muted);
-            padding: 10px 14px;
+            text-transform: uppercase;
             border-bottom: 1px solid var(--card-border);
+            font-weight: 600;
         }
-        .team-table td {
-            padding: 14px;
+        td {
+            padding: 16px;
             font-size: 13px;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        .role-badge {
+        tr {
+            transition: background 0.15s ease;
+            cursor: pointer;
+        }
+        tr:hover td {
+            background: rgba(255,255,255,0.025);
+        }
+
+        tbody tr.critical td:first-child { border-left: 4px solid var(--error-red); padding-left: 20px; }
+        tbody tr.warning td:first-child { border-left: 4px solid var(--warning-orange); padding-left: 20px; }
+        tbody tr.info td:first-child { border-left: 4px solid var(--accent-blue); padding-left: 20px; }
+
+        .severity-badge {
             padding: 3px 10px;
             border-radius: 12px;
             font-size: 11px;
-            font-weight: 600;
-            background: rgba(59, 130, 246, 0.15);
+            font-weight: 700;
+        }
+        .sev-critical { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .sev-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .sev-info { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+        .channel-tag {
+            font-family: var(--font-mono);
+            font-size: 12px;
             color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(59, 130, 246, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
         }
-
-        .invite-box {
-            display: flex;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .invite-box input { flex: 1; }
-
     
         /* ══════════════════════════════════════════════════════
            MOBILE TOP HEADER BAR (hidden on desktop)
@@ -963,118 +904,6 @@
         .tag-python  { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; }
         .tag-go      { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
         .tag-auth    { background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.35); color: #f472b6; }
-    
-        /* Professional Floating Dark Toast Notification Badge */
-        .toast-badge {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            background: #0d0d14;
-            border: 1px solid rgba(59, 130, 246, 0.4);
-            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(59, 130, 246, 0.25);
-            padding: 12px 20px;
-            border-radius: 50px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: var(--font-main);
-            z-index: 10000;
-            opacity: 0;
-            transform: translateY(20px) scale(0.95);
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .toast-badge.show {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-            pointer-events: auto;
-        }
-        .toast-badge .toast-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent-blue);
-        }
-
-    
-        
-
-    /* Danger Zone Delete Project Modal */
-        .delete-modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 999999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.25s ease;
-        }
-        .delete-modal-backdrop.open {
-            display: flex !important;
-            opacity: 1 !important;
-        }
-        .delete-modal-box {
-            background: #0d0d14;
-            border: 1px solid rgba(239, 68, 68, 0.5);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(239, 68, 68, 0.3);
-            border-radius: 24px;
-            width: 460px;
-            max-width: 92vw;
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            position: relative;
-            z-index: 1000000;
-        }
-        .delete-modal-header {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .delete-icon-wrapper {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ef4444;
-            flex-shrink: 0;
-        }
-        .delete-modal-title {
-            font-size: 18px;
-            font-weight: 800;
-            color: #ffffff;
-            font-family: var(--font-main);
-        }
-        .delete-modal-desc {
-            font-size: 13px;
-            color: #94a3b8;
-            line-height: 1.6;
-            font-family: var(--font-main);
-        }
-        .delete-modal-actions {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -1091,7 +920,7 @@
             <span>BugRadar<span style="color:#3b82f6;">.</span></span>
         </a>
         <div class="mobile-header-right">
-            <a href="alerts.html" class="nav-item">
+            <a href="alerts.html" class="nav-item active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
@@ -1150,11 +979,11 @@
                     </svg>
                     <span>Performance</span>
                 </a>
-                <a href="alerts.html" class="nav-item">
+                <a href="alerts.html" class="nav-item active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
-                <a href="settings.html" class="mob-nav-item active">
+                <a href="settings.html" class="mob-nav-item ">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -1170,7 +999,7 @@
                         <div class="mob-user-name">Shiza Ahsan</div>
                         <div class="mob-user-email">admin@bugradar.io</div>
                     </div>
-                    <a href="login.html" class="mob-signout" title="Sign Out">
+                    <a href="#" class="mob-signout" title="Sign Out" onclick="handleLogout(); return false;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
@@ -1204,8 +1033,8 @@
         </a>
 
         <div class="sidebar-page-title">
-            <h2><span class="bold">Project</span> <span class="light">Settings</span></h2>
-            <p>Manage API keys, team & integrations</p>
+            <h2><span class="bold">Alerts</span> <span class="light">Center</span></h2>
+            <p>Threshold rules & notification triggers</p>
         </div>
 
         <div class="nav-label">Main Menu</div>
@@ -1223,7 +1052,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 Performance
             </a>
-            <a href="alerts.html" class="nav-item">
+            <a href="alerts.html" class="nav-item active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
@@ -1231,7 +1060,7 @@
 
         <div class="nav-label">Settings</div>
         <ul class="nav-list">
-            <a href="settings.html" class="nav-item active">
+            <a href="settings.html" class="nav-item ">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Project Settings
             </a>
@@ -1254,272 +1083,72 @@
     <!-- MAIN CONTENT -->
     <main class="main-wrapper">
         <div class="page-header">
-            <h1><span class="bold">Project</span> <span class="light">Configuration & Settings</span></h1>
-            <p>Manage project DSN, alert integrations, and team access permissions.</p>
+            <h1><span class="bold">Alert History &</span> <span class="light">Incidents</span></h1>
+            <p>Audit trail of automated error spike notifications sent via Slack, Webhooks, and Email.</p>
         </div>
 
-        <div class="settings-grid">
-            
-            <!-- GENERAL SETTINGS -->
-            <div class="settings-card">
-                <div class="card-header">
-                    <h3 class="card-title"><span class="bold">General</span> <span class="light">Project Info</span></h3>
-                    <p class="card-desc">Basic details and Client DSN Key for error telemetry initialization.</p>
-                </div>
+        <!-- TOP METRICS (populated from the alerts API — no fabricated numbers) -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-title">Active Rules</span>
+                <div class="metric-val number-font" id="metric-rules" style="color:var(--accent-blue);">0</div>
+                <div class="metric-sub">Enabled alert rules</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">Alerts Fired (24h)</span>
+                <div class="metric-val number-font" id="metric-fired" style="color:var(--error-red);">0</div>
+                <div class="metric-sub">Notifications sent today</div>
+            </div>
+            <div class="metric-card">
+                <span class="metric-title">Total Alerts Logged</span>
+                <div class="metric-val number-font" id="metric-total" style="color:var(--text-main);">0</div>
+                <div class="metric-sub">Full history</div>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label class="form-label">Project Name</label>
-                    <input type="text" class="form-input" value="Web-Frontend (Production)">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Project DSN Key</label>
-                    <div class="dsn-copy-box">
-                        <input type="text" id="dsnInput" class="form-input" readonly value="https://a8f9210c443b@bugradar.io/prj_94021">
-                        <button class="btn btn-secondary" id="copyDsnBtn" onclick="copyDSN()">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Copy
-                        </button>
-                    </div>
-                </div>
+        <!-- CONTROLS ROW -->
+        <div class="controls-row">
+            <div class="time-filters">
+                <button class="filter-pill-btn active" onclick="createAlertRule()">+ New Rule</button>
             </div>
 
-            <!-- ALERT RULES & INTEGRATIONS -->
-            <div class="settings-card">
-                <div class="card-header">
-                    <h3 class="card-title"><span class="bold">Alert Rules</span> <span class="light">& Notifications</span></h3>
-                    <p class="card-desc">Configure automated triggers when exception counts exceed safety limits.</p>
-                </div>
-
-                <div class="toggle-row">
-                    <div class="toggle-info">
-                        <h4>Immediate Email Alert on Unhandled Exception</h4>
-                        <p>Receive email notification instantly when a new high-severity crash occurs.</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="toggle-row">
-                    <div class="toggle-info">
-                        <h4>Slack Webhook Notification</h4>
-                        <p>Post real-time error logs to a Slack channel.</p>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="slackToggle" checked onchange="toggleSlackInput()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-                <div class="form-group" id="slackGroup" style="margin-top: 14px;">
-                    <label class="form-label">Slack Webhook URL</label>
-                    <input type="text" class="form-input" value="https://hooks.slack.com/services/T0000/B0000/XXXXXX">
-                </div>
+            <div class="search-bar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="alertSearch" placeholder="Search alert rules, channels, or triggers...">
             </div>
+        </div>
 
-            <!-- TEAM MEMBERS -->
-            <div class="settings-card">
-                <div class="card-header">
-                    <h3 class="card-title"><span class="bold">Team Members</span> <span class="light">& Roles</span></h3>
-                    <p class="card-desc">Collaborators who have access to triage issues for this project.</p>
-                </div>
-
-                <div id="team-members-list">
-                    <div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Loading team members...</div>
-                </div>
-
-                <div class="invite-box">
-                    <input type="email" id="inviteEmail" class="form-input" placeholder="colleague@company.com">
-                    <button class="btn btn-primary" onclick="inviteMember()" style="white-space:nowrap;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                        Invite Member
-                    </button>
-                </div>
-
-                <div style="margin-top:20px;">
-                    <h4 style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">Pending Invitations</h4>
-                    <div id="pending-invitations-list">
-                        <div style="padding:12px;color:var(--text-muted);font-size:12px">No pending invitations</div>
-                    </div>
-                </div>
+        <!-- ALERT RULES (rendered by app.js from GET /api/alerts/project/:id) -->
+        <div class="table-card">
+            <span style="font-size:15px;font-weight:700;color:var(--text-main);display:block;margin-bottom:16px">Alert Rules</span>
+            <div id="alert-rules-list">
+                <div style="padding:20px;color:var(--text-muted);font-size:13px;text-align:center">Loading alert rules...</div>
             </div>
+        </div>
 
-            <!-- DANGER ZONE -->
-            <div class="settings-card" style="border-color: rgba(239, 68, 68, 0.3);">
-                <div class="card-header">
-                    <h3 class="card-title" style="color: var(--error-red);"><span class="bold" style="color:var(--error-red);">Danger Zone</span></h3>
-                    <p class="card-desc">Permanent actions that cannot be undone.</p>
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h4 style="font-size:14px;">Delete Project</h4>
-                        <p style="font-size:12px; color:var(--text-muted);">Permanently remove this project and all associated issue logs.</p>
-                    </div>
-                    <button class="btn btn-danger" onclick="openDeleteProjectModal()">Delete Project</button>
-                </div>
+        <!-- ALERT HISTORY (rendered by app.js from GET /api/alerts/history/:id) -->
+        <div class="table-card">
+            <span style="font-size:15px;font-weight:700;color:var(--text-main);display:block;margin-bottom:16px">Alert History</span>
+            <div id="alert-history-list">
+                <div style="padding:20px;color:var(--text-muted);font-size:13px;text-align:center">Loading alert history...</div>
             </div>
-
         </div>
     </main>
 
-    <!-- FLOATING TOAST BADGE CONTAINER -->
-    <div class="toast-badge" id="appToast">
-        <span class="toast-icon" id="toastIcon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </span>
-        <span id="toastMsg">Action completed successfully</span>
-    </div>
-
     <script>
-        let toastTimeout;
-        function showToast(msg, type = 'success') {
-            const toast = document.getElementById('appToast');
-            const toastMsg = document.getElementById('toastMsg');
-            const toastIcon = document.getElementById('toastIcon');
+        // Live search filter over the rendered rule/history cards (queried at event
+        // time — the lists load asynchronously via app.js)
+        const searchInput = document.getElementById('alertSearch');
 
-            if (!toast || !toastMsg) return;
-
-            toastMsg.innerText = msg;
-
-            if (type === 'copy' || type === 'success') {
-                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-                toast.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(16, 185, 129, 0.25)';
-            } else if (type === 'danger') {
-                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-                toast.style.borderColor = 'rgba(239, 68, 68, 0.4)';
-                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(239, 68, 68, 0.25)';
-            } else {
-                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-                toast.style.borderColor = 'rgba(59, 130, 246, 0.4)';
-                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(59, 130, 246, 0.25)';
-            }
-
-            toast.classList.add('show');
-
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase().trim();
+                document.querySelectorAll('#alert-rules-list > *, #alert-history-list > *').forEach(r => {
+                    r.style.display = (!query || r.innerText.toLowerCase().includes(query)) ? '' : 'none';
+                });
+            });
         }
-
-        function copyDSN() {
-            const input = document.getElementById('dsnInput');
-            const btn = document.getElementById('copyDsnBtn');
-            if (input) {
-                input.select();
-                navigator.clipboard.writeText(input.value).catch(() => document.execCommand('copy'));
-            }
-            if (btn) {
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
-                btn.style.borderColor = '#10b981';
-                btn.style.color = '#10b981';
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                    btn.style.borderColor = '';
-                    btn.style.color = '';
-                }, 2000);
-            }
-            showToast('Project DSN Key copied to clipboard', 'copy');
-        }
-
-        function saveGeneralSettings() {
-            showToast('General project settings updated', 'success');
-        }
-
-        function saveAlertRules() {
-            showToast('Alert notification triggers updated', 'success');
-        }
-
-        function toggleSlackInput() {
-            const group = document.getElementById('slackGroup');
-            const toggle = document.getElementById('slackToggle');
-            if (group && toggle) {
-                group.style.display = toggle.checked ? 'block' : 'none';
-            }
-        }
-
-        function sendInvite() {
-            const email = document.getElementById('inviteEmail');
-            if (!email || !email.value.trim()) {
-                showToast('Please enter a valid member email address', 'danger');
-                return;
-            }
-            showToast('Invitation sent to ' + email.value.trim(), 'success');
-            email.value = '';
-        }
-
-        
-        function removeMember(btn, name) {
-            const tr = btn.closest('tr');
-            if (tr) {
-                tr.style.transition = 'all 0.3s ease';
-                tr.style.opacity = '0';
-                tr.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    tr.remove();
-                }, 300);
-            }
-            showToast(name + ' removed from project team', 'danger');
-        }
-
-        function openDeleteProjectModal() {
-            var modal = document.getElementById('deleteProjectModal');
-            var input = document.getElementById('confirmDeleteInput');
-            var btn = document.getElementById('confirmDeleteBtn');
-            if (input) { input.value = ''; }
-            if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
-            if (modal) {
-                modal.classList.add('open');
-                document.body.style.overflow = 'hidden';
-            }
-        }
-
-        function validateDeleteInput() {
-            var input = document.getElementById('confirmDeleteInput');
-            var btn = document.getElementById('confirmDeleteBtn');
-            if (!input || !btn) return;
-            if (input.value.trim() === 'delete-project') {
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-                btn.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.4)';
-            } else {
-                btn.disabled = true;
-                btn.style.opacity = '0.4';
-                btn.style.cursor = 'not-allowed';
-                btn.style.boxShadow = 'none';
-            }
-        }
-
-        function closeDeleteProjectModal() {
-            var modal = document.getElementById('deleteProjectModal');
-            if (modal) {
-                modal.classList.remove('open');
-                document.body.style.overflow = '';
-            }
-        }
-
-        function closeDeleteModalOnBackdrop(e) {
-            if (e.target === document.getElementById('deleteProjectModal')) {
-                closeDeleteProjectModal();
-            }
-        }
-
-        function confirmDeleteProject() {
-            closeDeleteProjectModal();
-            showToast('Project "Web-Frontend" has been deleted', 'danger');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 1500);
-        }
-
-        function removeMember_old(name) {
-            showToast(name + ' removed from project team', 'danger');
-        }
+    
 
         // ── MOBILE DRAWER CONTROLLER ──
         function toggleMobDrawer() {
@@ -1548,6 +1177,7 @@
                 }
             }
         });
+
     </script>
 
     <!-- COLOR SCHEME GUIDE MODAL -->
@@ -1638,41 +1268,6 @@
             }
         }
     </script>
-
-    <!-- DELETE PROJECT CONFIRMATION MODAL (WITH TYPE-TO-CONFIRM INPUT) -->
-    <div class="delete-modal-backdrop" id="deleteProjectModal" onclick="closeDeleteModalOnBackdrop(event)">
-        <div class="delete-modal-box">
-            <div class="delete-modal-header">
-                <div class="delete-icon-wrapper">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                    </svg>
-                </div>
-                <div>
-                    <div class="delete-modal-title">Delete "Web-Frontend"?</div>
-                    <div style="font-size: 12px; color: #ef4444; font-weight: 600;">This action is permanent and cannot be undone</div>
-                </div>
-            </div>
-
-            <div class="delete-modal-desc">
-                Are you sure you want to delete this project? All associated exception logs, performance telemetry, breadcrumb traces, and alert threshold rules will be permanently removed.
-            </div>
-
-            <div style="margin: 4px 0 6px;">
-                <label style="display:block; font-size:12px; font-weight:600; color:#e4e4e7; margin-bottom:8px;">
-                    To confirm deletion, type <code style="background:rgba(239,68,68,0.15); color:#f87171; padding:2px 6px; border-radius:4px; font-family:var(--font-mono);">delete-project</code> below:
-                </label>
-                <input type="text" id="confirmDeleteInput" class="form-input" placeholder="Type 'delete-project' to confirm" oninput="validateDeleteInput()" style="background:#09090d; border-color:#272736;">
-            </div>
-
-            <div class="delete-modal-actions">
-                <button class="btn btn-secondary" onclick="closeDeleteProjectModal()">Cancel</button>
-                <button class="btn btn-danger" id="confirmDeleteBtn" disabled onclick="confirmDeleteProject()" style="opacity: 0.4; cursor: not-allowed;">Permanently Delete</button>
-            </div>
-        </div>
-    </div>
 
     <script src="app.js"></script>
 </body>

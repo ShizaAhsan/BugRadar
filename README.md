@@ -38,8 +38,10 @@ cp .env.example .env
 ### 3. Setup Database
 
 ```bash
-# Create the PostgreSQL database
-createdb bugradar
+# Create the PostgreSQL role + database
+# (defaults: bugradar / bugradar_secret — override with DB_USER,
+#  DB_PASSWORD, DB_NAME and the DB_ADMIN_* variables)
+npm run setup-db
 
 # Run migrations
 npm run migrate
@@ -69,12 +71,21 @@ After running the seed script:
 ## Docker Deployment
 
 ```bash
+# Production-style stack (nginx on 80/443 with TLS — see DEPLOY.md for certs)
 docker compose up -d
+
+# Local stack (HTTP-only nginx on port 80, no certificates required)
+docker compose -f docker-compose.local.yml up -d
 ```
 
-This starts PostgreSQL, Redis, and the BugRadar server.
+This starts PostgreSQL, Redis, the BugRadar server (also published on
+`localhost:3000`) and an nginx reverse proxy. See `DEPLOY.md` for SSL setup,
+backups, and the full environment-variable reference.
 
 ## SDK Integration
+
+All three SDKs take the **full ingest URL** as the DSN — copy it from
+Settings → Project Setup in the dashboard.
 
 ### JavaScript (Browser)
 
@@ -82,7 +93,7 @@ This starts PostgreSQL, Redis, and the BugRadar server.
 <script src="/sdk/bugradar.js"></script>
 <script>
   BugRadar.init({
-    dsn: 'YOUR_DSN_KEY_HERE',
+    dsn: 'https://your-host/ingest/YOUR_DSN_KEY',
     environment: 'production',
   });
 </script>
@@ -93,8 +104,9 @@ This starts PostgreSQL, Redis, and the BugRadar server.
 ```javascript
 const BugRadar = require('./sdk/bugradar-node');
 
-BugRadar.init({ dsn: 'YOUR_DSN_KEY_HERE' });
-app.use(BugRadar.createExpressMiddleware());
+const client = new BugRadar({ dsn: 'https://your-host/ingest/YOUR_DSN_KEY' });
+client.install();  // captures uncaughtException / unhandledRejection
+app.use(client.createExpressMiddleware());
 ```
 
 ### Python
@@ -102,7 +114,7 @@ app.use(BugRadar.createExpressMiddleware());
 ```python
 from sdk.bugradar import BugRadar
 
-radar = BugRadar(dsn='YOUR_DSN_KEY_HERE')
+radar = BugRadar(dsn='https://your-host/ingest/YOUR_DSN_KEY')
 radar.install()
 ```
 
@@ -122,12 +134,16 @@ bugradar/
 │   ├── bugradar.js        # Browser SDK
 │   ├── bugradar-node.js   # Node.js SDK
 │   └── bugradar.py        # Python SDK
-├── *.html                 # Frontend pages
-├── app.js                 # Frontend application logic
-├── style.css              # Design system
-├── docker-compose.yml     # Docker deployment
+├── public/                # Frontend (static, served by Express)
+│   ├── *.html             # Frontend pages
+│   ├── app.js             # Frontend application logic
+│   ├── dashboard.js       # Dashboard chart & table logic
+│   └── style.css          # Design system
+├── docker-compose.yml     # Docker deployment (TLS)
+├── docker-compose.local.yml # Local stack (HTTP only)
 ├── Dockerfile             # Container build
-└── nginx.conf             # Reverse proxy config
+├── nginx.conf             # Reverse proxy config (production)
+└── nginx.local.conf       # Reverse proxy config (local)
 ```
 
 ## API Endpoints

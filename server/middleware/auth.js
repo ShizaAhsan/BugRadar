@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const { query } = require('../db');
+const { isUUID } = require('../validate');
 
 const authenticate = async (req, res, next) => {
   try {
@@ -44,6 +45,11 @@ const requireOrgAccess = async (req, res, next) => {
   try {
     const orgId = req.params.orgId;
     if (!orgId) return next();
+
+    if (!isUUID(orgId)) {
+      // Malformed org id => not found instead of a Postgres 500 (QA-BUG-REPORT.md B11)
+      return res.status(404).json({ error: 'Organization not found' });
+    }
 
     const result = await query(
       'SELECT role FROM memberships WHERE user_id = $1 AND organization_id = $2',

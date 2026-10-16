@@ -1,12 +1,14 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { isUUID } = require('../validate');
 
 const router = express.Router();
 
 router.use(authenticate);
 
 async function checkProjectAccess(projectId, userId) {
+  if (!isUUID(projectId)) return null; // invalid UUID => not found (QA-BUG-REPORT.md B11)
   const projectResult = await query('SELECT organization_id FROM projects WHERE id = $1', [projectId]);
   if (projectResult.rows.length === 0) return null;
 
@@ -20,6 +22,7 @@ async function checkProjectAccess(projectId, userId) {
 }
 
 async function checkRuleAccess(ruleId, userId) {
+  if (!isUUID(ruleId)) return null; // invalid UUID => not found (QA-BUG-REPORT.md B11)
   const ruleResult = await query(
     `SELECT ar.id, p.organization_id FROM alert_rules ar
      JOIN projects p ON ar.project_id = p.id WHERE ar.id = $1`,

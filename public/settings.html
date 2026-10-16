@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BugRadar™ - Dashboard</title>
+    <title>BugRadar™ - Project Settings</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* LANDING PAGE COLOR PALETTE & REFERENCE LAYOUT */
         :root {
             --bg-color: #030303;
             --sidebar-bg: #030303;
@@ -27,6 +26,7 @@
             --error-red: #ef4444;
             --error-red-bg: rgba(239, 68, 68, 0.1);
             --success-green: #10b981;
+            --warning-yellow: #ca8a04;
             
             --radius-card: 20px;
             --radius-pill: 50px;
@@ -78,7 +78,6 @@
             margin-bottom: 30px;
             color: var(--text-main);
             text-decoration: none;
-            font-family: var(--font-main);
         }
 
         .sidebar-page-title {
@@ -127,547 +126,253 @@
             padding: 10px 14px;
             border-radius: 12px;
             color: var(--text-muted);
+            text-decoration: none;
             font-size: 13px;
             font-weight: 600;
             transition: all 0.15s ease;
-            text-decoration: none;
         }
 
         .nav-item:hover {
-            color: var(--text-main);
             background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
         }
 
         .nav-item.active {
             background: rgba(59, 130, 246, 0.15);
             color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.4);
-            box-shadow: 0 0 14px rgba(59, 130, 246, 0.35);
-            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
         }
 
-        .nav-badge {
-            margin-left: auto;
-            background: rgba(239, 68, 68, 0.15);
-            color: #f87171;
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 50px;
-        }
-
-        /* --- BREADCRUMBS PATH (Matching Issue Detail Page) --- */
-        .breadcrumbs {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 16px;
-        }
-        .breadcrumbs a {
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .breadcrumbs a:hover {
-            color: var(--accent-blue);
-        }
-        .breadcrumbs .separator {
-            color: #3f3f46;
-        }
-        .breadcrumbs .current {
-            color: var(--text-main);
-            font-weight: 600;
-        }
-
-        /* --- MAIN CONTENT --- */
+        /* --- MAIN WRAPPER --- */
         .main-wrapper {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            padding: 24px 32px;
-            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent 40%), var(--bg-color);
+            padding: 36px 40px;
+            background: var(--bg-color);
         }
 
-        /* Top Header */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
+        .page-header {
+            margin-bottom: 32px;
         }
-
-        .header-pills {
-            display: flex;
-            gap: 12px;
+        .page-header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 6px;
         }
-        .pill-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 8px 16px;
-            border-radius: var(--radius-pill);
-            color: var(--text-muted);
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .pill-btn:hover {
-            border-color: rgba(255,255,255,0.2);
-            color: var(--text-main);
-        }
-
-        /* Search Bar & Dropdown */
-        .search-wrapper {
-            position: relative;
-            width: 320px;
-        }
-        .search-bar {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 10px 20px;
-            border-radius: var(--radius-pill);
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .search-bar:focus-within {
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
-        }
-        .search-bar input {
-            background: none;
-            border: none;
-            color: var(--text-main);
-            outline: none;
-            width: 100%;
-            font-size: 13px;
-        }
-        .search-bar input::placeholder {
+        .page-header h1 .bold { color: #ffffff; }
+        .page-header h1 .light { color: rgba(255,255,255,0.45); font-weight: 400; }
+        .page-header p {
+            font-size: 14px;
             color: var(--text-muted);
         }
-        .search-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0; right: 0;
-            background: #0d0d11;
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-            z-index: 50;
-            display: none;
+
+        /* Settings Grid Layout */
+        .settings-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            max-width: 900px;
         }
-        .search-dropdown.visible { display: block; }
-        .search-result-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 11px 16px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.15s;
+
+        .settings-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 28px;
+        }
+
+        .card-header {
+            margin-bottom: 20px;
             border-bottom: 1px solid var(--card-border);
-            text-decoration: none; color: var(--text-main);
+            padding-bottom: 16px;
         }
-        .search-result-item:last-child { border-bottom: none; }
-        .search-result-item:hover { background: rgba(255,255,255,0.06); }
-        .search-result-icon { font-size: 14px; flex-shrink: 0; }
-        .search-result-text { display: flex; flex-direction: column; gap: 2px; }
-        .search-result-title { font-weight: 600; font-size: 12px; }
-        .search-result-sub { font-size: 10px; color: var(--text-muted); font-family: var(--font-mono); }
-        .search-no-result { padding: 14px 16px; font-size: 12px; color: var(--text-muted); text-align: center; }
+        .card-title {
+            font-size: 17px;
+            letter-spacing: 0.02em;
+        }
+        .card-title .bold { font-weight: 800; color: #ffffff; }
+        .card-title .light { font-weight: 400; color: rgba(255,255,255,0.45); }
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
 
-        /* User Header Actions & Profile Dropdown */
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+        /* Form Fields */
+        .form-group {
+            margin-bottom: 20px;
         }
-        .icon-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
             color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.2s;
+            margin-bottom: 8px;
         }
-        .icon-btn:hover {
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 13px;
+            outline: none;
+            transition: border 0.15s;
+        }
+        .form-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .dsn-copy-box {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .dsn-copy-box input {
+            font-family: var(--font-mono);
             color: #60a5fa;
         }
 
-        .user-profile-wrap { position: relative; }
-        .user-profile {
-            display: flex; align-items: center; gap: 10px; cursor: pointer;
-            padding: 4px 8px; border-radius: 20px; transition: background 0.2s;
-        }
-        .user-profile:hover { background: rgba(255, 255, 255, 0.04); }
-        .avatar {
-            width: 36px; height: 36px; border-radius: 50%; background: var(--accent-cyan);
-            display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000;
-        }
-        .profile-dropdown {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            min-width: 180px;
-            background: #0d0d11;
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.7);
-            z-index: 50;
-            display: none;
-        }
-        .profile-dropdown.visible { display: block; }
-        .profile-drop-item {
-            display: flex; align-items: center; gap: 10px;
-            padding: 11px 16px;
-            font-size: 13px; color: var(--text-main);
-            cursor: pointer; text-decoration: none;
-            border-bottom: 1px solid var(--card-border);
-            transition: background 0.15s;
-        }
-        .profile-drop-item:last-child { border-bottom: none; }
-        .profile-drop-item:hover { background: rgba(255,255,255,0.06); }
-
-        /* KPI Card & Time Dropdown */
-        .dashboard-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .top-cards-row {
-            display: flex;
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 24px;
-        }
-
-        .main-kpi-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: relative;
-            overflow: visible;
-        }
-        .main-kpi-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.1), transparent 60%);
-            pointer-events: none; border-radius: var(--radius-card);
-        }
-
-        .kpi-title-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
-            position: relative;
-        }
-        .kpi-title { font-size: 14px; color: var(--text-muted); font-weight: 500; }
-        
-        .kpi-big-value { font-size: 32px; font-weight: 700; font-family: var(--font-number); margin-bottom: 8px; font-variant-numeric: tabular-nums; }
-        .kpi-subtitle { font-size: 12px; color: var(--success-green); display: flex; align-items: center; gap: 4px; font-family: var(--font-number); }
-
-        .kpi-time-dropdown {
-            position: absolute;
-            top: calc(100% + 4px);
-            right: 0;
-            min-width: 140px;
-            background: #0d0d11;
-            border: 1px solid var(--card-border);
+        .btn {
+            padding: 10px 20px;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-            z-index: 50;
-            display: none;
-        }
-        .kpi-time-dropdown.visible { display: block; }
-        .kpi-time-opt {
-            padding: 9px 14px;
-            font-size: 12px; color: var(--text-muted);
-            cursor: pointer;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            transition: background 0.15s;
-            font-family: var(--font-number);
-        }
-        .kpi-time-opt:last-child { border-bottom: none; }
-        .kpi-time-opt:hover, .kpi-time-opt.active { background: rgba(59,130,246,0.12); color: #60a5fa; }
-
-        .small-cards-container {
-            display: flex;
-            gap: 16px;
-            flex: 2;
-        }
-        .small-card {
-            flex: 1;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 20px;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .small-card-value {
-            font-size: 20px; font-weight: 700; font-family: var(--font-number); margin-top: 16px; font-variant-numeric: tabular-nums;
-        }
-        .text-error { color: var(--error-red) !important; }
-
-        /* Chart Section */
-        .chart-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 24px;
-        }
-        .chart-header-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
-        }
-        .time-filters, #statusFilterPills {
-            display: flex;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 4px;
-            border-radius: var(--radius-pill);
-            border: 1px solid var(--card-border);
-        }
-
-        .time-filter-btn, .table-pill-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 6px 16px;
-            border-radius: var(--radius-pill);
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: var(--font-number);
-            outline: none;
+            border: none;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-
-        .time-filter-btn.active, .table-pill-btn.active {
+        .btn-primary {
             background: var(--accent-blue);
             color: #ffffff;
-            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: var(--accent-blue-hover);
             box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
         }
-
-        .time-filter-btn:hover:not(.active), .table-pill-btn:hover:not(.active) {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.04);
-        }
-
-        .chart-wrapper {
-            display: flex;
-            gap: 16px;
-            align-items: flex-start;
-            position: relative;
-        }
-
-        .y-axis {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 180px;
-            font-size: 11px;
-            color: var(--text-muted);
-            font-family: var(--font-number);
-            padding-right: 8px;
-            user-select: none;
-        }
-
-        .chart-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .svg-chart-container {
-            width: 100%;
-            height: 190px;
-            position: relative;
-            cursor: grab;
-            padding-top: 15px;
-            box-sizing: border-box;
-            user-select: none;
-        }
-        .svg-chart-container svg {
-            overflow: visible;
-        }
-
-        .x-axis {
-            display: flex;
-            justify-content: space-between;
-            padding-top: 12px;
-            font-size: 11px;
-            color: var(--text-muted);
-            font-family: var(--font-number);
-            border-top: 1px solid var(--card-border);
-            user-select: none;
-            margin-top: 6px;
-        }
-
-        /* Sorting Table & Table Header Styles */
-        .table-card {
-            background: var(--card-bg);
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--card-border);
-            border-radius: var(--radius-card);
-            padding: 24px;
+            color: var(--text-main);
         }
-        .table-header-row {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.09);
         }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th {
-            text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted);
-            text-transform: uppercase; border-bottom: 1px solid var(--card-border); font-weight: 600;
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
         }
-        td {
-            padding: 16px; font-size: 13px; border-bottom: 1px solid var(--card-border);
-        }
-        tr:last-child td { border-bottom: none; }
-
-        tbody tr {
-            transition: background 0.15s ease;
-        }
-        tbody tr:hover td {
-            background: rgba(255, 255, 255, 0.025);
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
         }
 
-        tbody tr.unresolved td:first-child {
-            border-left: 4px solid var(--error-red);
-            padding-left: 20px;
-        }
-        tbody tr.resolved td:first-child {
-            border-left: 4px solid var(--accent-blue);
-            padding-left: 20px;
-        }
-        tbody tr.ignored td:first-child {
-            border-left: 4px solid #71717a;
-            padding-left: 20px;
-        }
-        tbody tr.ignored td { opacity: 0.55; }
-
-        .sortable-th {
-            cursor: pointer;
-            user-select: none;
-            transition: color 0.15s;
-        }
-        .sortable-th:hover { color: var(--text-main); }
-
-        .sort-arrows {
-            display: inline-flex;
-            gap: 3px;
-            margin-left: 6px;
-            font-size: 15px;
-            line-height: 1;
-            vertical-align: middle;
-        }
-        .sort-arrows span {
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-        }
-        .sort-arrows span.active-glow {
-            color: #3b82f6 !important;
-            font-weight: 800;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.95), 0 0 20px rgba(59, 130, 246, 0.6);
-        }
-
-        
-        /* Distinct Tech-Stack Framework Tag Color Palette */
-        
-        /* 100% Distinct Signature Tech-Stack Framework Tag Colors */
-        .tag {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: var(--radius-pill);
-            font-size: 11px;
-            font-weight: 700;
-            font-family: var(--font-main);
-            letter-spacing: 0.02em;
-        }
-        .tag-react   { background: rgba(45, 212, 191, 0.14); border: 1px solid rgba(45, 212, 191, 0.35); color: #2dd4bf; } /* Mint Turquoise */
-        .tag-next    { background: rgba(226, 232, 240, 0.12); border: 1px solid rgba(226, 232, 240, 0.25); color: #e2e8f0; } /* Silver White */
-        .tag-api     { background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; } /* Deep Purple */
-        .tag-backend { background: rgba(217, 70, 239, 0.15); border: 1px solid rgba(217, 70, 239, 0.35); color: #e879f9; } /* Fuchsia Magenta */
-        .tag-python  { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; } /* Indigo Violet */
-        .tag-go      { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; } /* Sky Blue */
-        .tag-auth    { background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.35); color: #f472b6; } /* Rose Pink */
-
-        .tag {
-            display: inline-block;
-            padding: 2.5px 9px;
-            border-radius: var(--radius-pill);
-            font-size: 11px;
-            font-weight: 700;
-            font-family: var(--font-main);
-            letter-spacing: 0.02em;
-        }
-        .tag-react   { background: rgba(34, 211, 238, 0.14); border: 1px solid rgba(34, 211, 238, 0.35); color: #22d3ee; }
-        .tag-next    { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; }
-        .tag-api     { background: rgba(168, 85, 247, 0.14); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; }
-        .tag-backend { background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; }
-
-        tbody tr.severity-critical td:first-child,
-        tbody tr.unresolved.critical td:first-child,
-        tbody tr.unresolved:first-child td:first-child {
-            border-left: 4px solid #ef4444;
-        }
-        tbody tr.severity-high td:first-child,
-        tbody tr.unresolved.high td:first-child {
-            border-left: 4px solid #f59e0b;
-        }
-        tbody tr.severity-medium td:first-child,
-        tbody tr.unresolved.medium td:first-child {
-            border-left: 4px solid #3b82f6;
-        }
-        tbody tr.severity-resolved td:first-child,
-        tbody tr.resolved td:first-child {
-            border-left: 4px solid #10b981;
-        }
-
-        .issue-title { font-weight: 600; color: var(--error-red); font-family: var(--font-mono); display: block; margin-bottom: 4px; }
-        .issue-loc { color: var(--text-muted); font-size: 11px; font-family: var(--font-mono); }
-
-        /* Modal Overlay for Alert & Ask Screen */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-        }
-        .modal-overlay.active { display: flex; }
-        .modal-box {
-            background: #0d0d11;
-            border: 1px solid var(--accent-blue);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.35);
-            border-radius: var(--radius-card);
-            padding: 28px;
-            max-width: 460px;
-            width: 90%;
+        /* Toggle Switch */
+        .toggle-row {
             display: flex;
-            flex-direction: column;
-            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
         }
-        .modal-title { font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-        .modal-body { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
-        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 8px; }
+        .toggle-row:last-child {
+            border-bottom: none;
+        }
+        .toggle-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .toggle-info p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .3s;
+            border-radius: 24px;
+            border: 1px solid var(--card-border);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--accent-blue);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Team Table */
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+        .team-table th {
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--card-border);
+        }
+        .team-table td {
+            padding: 14px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .role-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .invite-box {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .invite-box input { flex: 1; }
+
     
         /* ══════════════════════════════════════════════════════
            MOBILE TOP HEADER BAR (hidden on desktop)
@@ -1258,6 +963,118 @@
         .tag-python  { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: #818cf8; }
         .tag-go      { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8; }
         .tag-auth    { background: rgba(244, 114, 182, 0.15); border: 1px solid rgba(244, 114, 182, 0.35); color: #f472b6; }
+    
+        /* Professional Floating Dark Toast Notification Badge */
+        .toast-badge {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: #0d0d14;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(59, 130, 246, 0.25);
+            padding: 12px 20px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--font-main);
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .toast-badge.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+        .toast-badge .toast-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+        }
+
+    
+        
+
+    /* Danger Zone Delete Project Modal */
+        .delete-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .delete-modal-backdrop.open {
+            display: flex !important;
+            opacity: 1 !important;
+        }
+        .delete-modal-box {
+            background: #0d0d14;
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(239, 68, 68, 0.3);
+            border-radius: 24px;
+            width: 460px;
+            max-width: 92vw;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            z-index: 1000000;
+        }
+        .delete-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .delete-icon-wrapper {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ef4444;
+            flex-shrink: 0;
+        }
+        .delete-modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            font-family: var(--font-main);
+        }
+        .delete-modal-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+            font-family: var(--font-main);
+        }
+        .delete-modal-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -1278,7 +1095,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
-            <button class="hamburger-btn" id="mobHamBtn" aria-label="Toggle navigation">
+            <button class="hamburger-btn" id="mobHamBtn" onclick="toggleMobDrawer()" aria-label="Toggle navigation">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -1287,7 +1104,7 @@
     </div>
 
     <!-- MOBILE SLIDE-IN DRAWER BACKDROP & DRAWER -->
-    <div class="mob-drawer-backdrop" id="mobDrawerBackdrop">
+    <div class="mob-drawer-backdrop" id="mobDrawerBackdrop" onclick="closeMobDrawerOnBackdrop(event)">
         <aside class="mob-drawer" id="mobDrawer">
             <div class="mob-drawer-top">
                 <a href="dashboard.html" class="mobile-brand">
@@ -1299,7 +1116,7 @@
                     </svg>
                     <span>BugRadar<span style="color:#3b82f6;">.</span></span>
                 </a>
-                <button class="mob-drawer-close" aria-label="Close drawer">
+                <button class="mob-drawer-close" onclick="toggleMobDrawer()" aria-label="Close drawer">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -1309,7 +1126,7 @@
 
             <nav class="mob-drawer-nav">
                 <div class="mob-nav-label">Navigation</div>
-                <a href="dashboard.html" class="mob-nav-item active">
+                <a href="dashboard.html" class="mob-nav-item ">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -1337,7 +1154,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                 Alerts
             </a>
-                <a href="settings.html" class="mob-nav-item ">
+                <a href="settings.html" class="mob-nav-item active">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -1353,7 +1170,7 @@
                         <div class="mob-user-name">Shiza Ahsan</div>
                         <div class="mob-user-email">admin@bugradar.io</div>
                     </div>
-                    <a href="login.html" class="mob-signout" title="Sign Out">
+                    <a href="#" class="mob-signout" title="Sign Out" onclick="handleLogout(); return false;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
@@ -1364,7 +1181,7 @@
             </div>
         
         <div class="sidebar-footer-guide">
-            <button type="button" class="sidebar-color-guide-btn" title="View Color Scheme Differentiation Guide">
+            <button type="button" class="sidebar-color-guide-btn" onclick="toggleColorGuideModal()" title="View Color Scheme Differentiation Guide">
                 <div class="color-dots-group">
                     <span class="dot-mini dot-red"></span>
                     <span class="dot-mini dot-orange"></span>
@@ -1387,13 +1204,13 @@
         </a>
 
         <div class="sidebar-page-title">
-            <h2><span class="bold">Overview</span> <span class="light">Dashboard</span></h2>
-            <p>Welcome back, Sarah</p>
+            <h2><span class="bold">Project</span> <span class="light">Settings</span></h2>
+            <p>Manage API keys, team & integrations</p>
         </div>
 
         <div class="nav-label">Main Menu</div>
         <ul class="nav-list">
-            <a href="dashboard.html" class="nav-item active">
+            <a href="dashboard.html" class="nav-item ">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Dashboard
             </a>
@@ -1414,14 +1231,14 @@
 
         <div class="nav-label">Settings</div>
         <ul class="nav-list">
-            <a href="settings.html" class="nav-item ">
+            <a href="settings.html" class="nav-item active">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Project Settings
             </a>
         </ul>
     
         <div class="sidebar-footer-guide">
-            <button type="button" class="sidebar-color-guide-btn" title="View Color Scheme Differentiation Guide">
+            <button type="button" class="sidebar-color-guide-btn" onclick="toggleColorGuideModal()" title="View Color Scheme Differentiation Guide">
                 <div class="color-dots-group">
                     <span class="dot-mini dot-red"></span>
                     <span class="dot-mini dot-orange"></span>
@@ -1436,266 +1253,277 @@
 
     <!-- MAIN CONTENT -->
     <main class="main-wrapper">
-
-        <!-- Breadcrumbs Navigation Path (Matching Issue Details Style) -->
-        <div class="breadcrumbs">
-            <a href="index.html">Projects</a>
-            <span class="separator">/</span>
-            <a href="dashboard.html">Web-Frontend</a>
-            <span class="separator">/</span>
-            <span class="current">Overview Dashboard</span>
+        <div class="page-header">
+            <h1><span class="bold">Project</span> <span class="light">Configuration & Settings</span></h1>
+            <p>Manage project DSN, alert integrations, and team access permissions.</p>
         </div>
-        
-        <!-- Header -->
-        <header class="header">
-            <div class="header-pills">
-                <div class="pill-btn">Project: Web-Frontend</div>
-                <div class="pill-btn">Env: Production</div>
-            </div>
 
-            <!-- Search with dropdown -->
-            <div class="search-wrapper">
-                <div class="search-bar">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="dashboardSearchInput" placeholder="Search for errors, tags, or users..." autocomplete="off">
-                </div>
-                <div class="search-dropdown" id="searchDropdown"></div>
-            </div>
-
-            <div class="user-actions">
-                <!-- Bell Icon → Alerts -->
-                <div class="icon-btn" title="Alerts">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                </div>
-                <!-- Gear Icon → Settings -->
-                <div class="icon-btn" title="Settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                </div>
-                <!-- Profile with dropdown -->
-                <div class="user-profile-wrap" id="profileWrap">
-                    <div class="user-profile">
-                        <div class="avatar">SJ</div>
-                        <div style="font-size: 13px; font-weight: 500;">Sarah J. &#9662;</div>
-                    </div>
-                    <div class="profile-dropdown" id="profileDropdown">
-                        <a href="settings.html" class="profile-drop-item">&#9881;&#65039; &nbsp;Account Settings</a>
-                        <a href="settings.html" class="profile-drop-item">&#128101; &nbsp;Team Members</a>
-                        <a href="index.html" class="profile-drop-item" style="color:#ef4444;">&#128682; &nbsp;Sign Out</a>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <div class="dashboard-grid">
+        <div class="settings-grid">
             
-            <!-- TOP KPI ROW -->
-            <div class="top-cards-row">
-                <!-- Big Card -->
-                <div class="main-kpi-card card">
-                    <div class="kpi-title-row">
-                        <span class="kpi-title">Total Error Events</span>
-                        <div style="position:relative;">
-                            <div class="pill-btn" id="kpiTimeBtn" style="padding:4px 10px; font-size:11px; cursor:pointer;">Last 24h &#9662;</div>
-                            <div class="kpi-time-dropdown" id="kpiTimeDropdown">
-                                <div class="kpi-time-opt active" data-label="Last 1h" data-val="3,812">Last 1h</div>
-                                <div class="kpi-time-opt" data-label="Last 24h" data-val="48,291">Last 24h</div>
-                                <div class="kpi-time-opt" data-label="Last 7d" data-val="312,440">Last 7d</div>
-                                <div class="kpi-time-opt" data-label="Last 30d" data-val="1,204,830">Last 30d</div>
-                            </div>
-                        </div>
+            <!-- GENERAL SETTINGS -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h3 class="card-title"><span class="bold">General</span> <span class="light">Project Info</span></h3>
+                    <p class="card-desc">Basic details and Client DSN Key for error telemetry initialization.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Project Name</label>
+                    <input type="text" class="form-input" id="setting-project-name" placeholder="Loading...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Platform</label>
+                    <input type="text" class="form-input" id="setting-project-platform" readonly placeholder="Loading...">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Project DSN Key</label>
+                    <div class="dsn-copy-box">
+                        <input type="text" id="dsnInput" class="form-input" readonly value="">
+                        <button class="btn btn-secondary" id="copyDsnBtn" onclick="copyDSN()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copy
+                        </button>
                     </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:16px;">
+                    <button class="btn btn-primary" onclick="updateProjectSettings()">Save Changes</button>
+                </div>
+            </div>
+
+            <!-- ALERT RULES & INTEGRATIONS -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h3 class="card-title"><span class="bold">Alert Rules</span> <span class="light">& Notifications</span></h3>
+                    <p class="card-desc">Configure automated triggers when exception counts exceed safety limits.</p>
+                </div>
+
+                <div style="padding:8px 0; color:var(--text-muted); font-size:13px; line-height:1.6;">
+                    Alert rules — new-issue emails, spike thresholds, and webhook
+                    notifications — are created and managed on the
+                    <a href="alerts.html" style="color:var(--accent-blue)">Alerts page</a>.
+                    This version does not include a Slack integration.
+                </div>
+            </div>
+
+            <!-- TEAM MEMBERS -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h3 class="card-title"><span class="bold">Team Members</span> <span class="light">& Roles</span></h3>
+                    <p class="card-desc">Collaborators who have access to triage issues for this project.</p>
+                </div>
+
+                <div id="team-members-list">
+                    <div style="padding:20px;color:var(--text-muted);font-size:12px;text-align:center">Loading team members...</div>
+                </div>
+
+                <div class="invite-box">
+                    <input type="email" id="inviteEmail" class="form-input" placeholder="colleague@company.com">
+                    <button class="btn btn-primary" onclick="sendInvite()" style="white-space:nowrap;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        Invite Member
+                    </button>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <h4 style="font-size:13px;color:var(--text-muted);margin-bottom:10px;">Pending Invitations</h4>
+                    <div id="pending-invitations-list">
+                        <div style="padding:12px;color:var(--text-muted);font-size:12px">No pending invitations</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DANGER ZONE -->
+            <div class="settings-card" style="border-color: rgba(239, 68, 68, 0.3);">
+                <div class="card-header">
+                    <h3 class="card-title" style="color: var(--error-red);"><span class="bold" style="color:var(--error-red);">Danger Zone</span></h3>
+                    <p class="card-desc">Permanent actions that cannot be undone.</p>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <div class="kpi-big-value" id="kpiBigValue">48,291</div>
-                        <div class="kpi-subtitle">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
-                            +12.4% vs yesterday
-                        </div>
+                        <h4 style="font-size:14px;">Delete Project</h4>
+                        <p style="font-size:12px; color:var(--text-muted);">Permanently remove this project and all associated issue logs.</p>
                     </div>
+                    <button class="btn btn-danger" onclick="openDeleteProjectModal()">Delete Project</button>
                 </div>
-
-                <!-- Small Cards -->
-                <div class="small-cards-container">
-                    <div class="small-card">
-                        <span class="kpi-title">Unresolved Issues</span>
-                        <div class="small-card-value text-error">12</div>
-                    </div>
-                    <div class="small-card">
-                        <span class="kpi-title">Affected Users</span>
-                        <div class="small-card-value" style="color:var(--text-main);">1,847</div>
-                    </div>
-                    <div class="small-card">
-                        <span class="kpi-title">Crash-Free Sessions</span>
-                        <div class="small-card-value" style="color:var(--accent-blue);">99.2%</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CHART ROW -->
-            <div class="chart-card">
-                <div class="chart-header-row">
-                    <span class="kpi-title" style="font-size: 15px; color: var(--text-main); font-weight: 700;">Error Volume Over Time</span>
-                    <div class="time-filters">
-                        <button class="time-filter-btn" data-range="1H">1H</button>
-                        <button class="time-filter-btn" data-range="24H">24H</button>
-                        <button class="time-filter-btn active" data-range="7D">7D</button>
-                        <button class="time-filter-btn" data-range="30D">30D</button>
-                    </div>
-                </div>
-
-                <div class="chart-wrapper">
-                    <!-- Dynamic Y Axis Labels -->
-                    <div class="y-axis" id="yAxis">
-                        <span>2,000</span>
-                        <span>1,500</span>
-                        <span>1,000</span>
-                        <span>500</span>
-                        <span>0</span>
-                    </div>
-
-                    <div class="chart-body">
-                        <div class="svg-chart-container" id="chartContainer">
-                            <!-- Dynamic SVG Graph -->
-                            <svg viewBox="0 0 1000 200" preserveAspectRatio="none" style="width: 100%; height: 100%;">
-                                <defs>
-                                    <linearGradient id="blueArea" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
-                                        <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
-                                    </linearGradient>
-                                </defs>
-
-                                <!-- Grid lines -->
-                                <line x1="0" y1="10" x2="1000" y2="10" stroke="#1f1f26" stroke-dasharray="3,3"/>
-                                <line x1="0" y1="55" x2="1000" y2="55" stroke="#1f1f26" stroke-dasharray="3,3"/>
-                                <line x1="0" y1="100" x2="1000" y2="100" stroke="#1f1f26" stroke-dasharray="3,3"/>
-                                <line x1="0" y1="145" x2="1000" y2="145" stroke="#1f1f26" stroke-dasharray="3,3"/>
-                                <line x1="0" y1="190" x2="1000" y2="190" stroke="#1f1f26"/>
-
-                                <!-- Dynamic Area Fill Path -->
-                                <path id="chartArea" d="" fill="url(#blueArea)"/>
-
-                                <!-- Dynamic Main Line Stroke -->
-                                <path id="chartLine" d="" fill="none" stroke="#3b82f6" stroke-width="3" filter="drop-shadow(0 0 8px rgba(59,130,246,0.6))"/>
-
-                                <!-- Indicator Vertical Guide Line -->
-                                <line id="guideLine" x1="500" y1="0" x2="500" y2="200" stroke="#3b82f6" stroke-dasharray="3,3" opacity="0.6"/>
-
-                                <!-- Indicator Glow Point -->
-                                <circle id="guidePoint" cx="500" cy="80" r="6" fill="#3b82f6" stroke="#ffffff" stroke-width="2.5"/>
-
-                                <!-- NATIVE SVG TOOLTIP TAG (100% Locked to guidePoint (cx, cy) on the Curve) -->
-                                <g id="svgTooltipGroup" transform="translate(500, 40)" style="transition: transform 0.05s ease-out; pointer-events: none;">
-                                    <rect id="svgTooltipBg" x="-65" y="-42" width="130" height="34" rx="8" ry="8" fill="#0d0d11" stroke="#3b82f6" stroke-width="1.5" filter="drop-shadow(0 0 12px rgba(59,130,246,0.6))"/>
-                                    <text id="svgTooltipTime" x="0" y="-26" text-anchor="middle" fill="#8a8f98" font-size="10" font-family="'Inter', sans-serif" font-weight="500">Wed 12:00 PM</text>
-                                    <text id="svgTooltipVal" x="0" y="-12" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700" font-family="'Inter', sans-serif">1,204 Errors</text>
-                                </g>
-                            </svg>
-                        </div>
-
-                        <!-- X Axis Labels -->
-                        <div class="x-axis" id="xAxis">
-                            <span>Mon</span>
-                            <span>Tue</span>
-                            <span>Wed</span>
-                            <span>Thu</span>
-                            <span>Fri</span>
-                            <span>Sat</span>
-                            <span>Sun</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RECENT ISSUES TABLE ROW -->
-            <div class="table-card">
-                <div class="table-header-row">
-                    <span class="kpi-title" style="font-size: 15px; color: var(--text-main); font-weight: 700;">Recent Issues Overview</span>
-                    
-                    <div class="time-filters" id="statusFilterPills">
-                        <button class="table-pill-btn active" data-status="all">All</button>
-                        <button class="table-pill-btn" data-status="unresolved">Unresolved</button>
-                        <button class="table-pill-btn" data-status="resolved">Resolved</button>
-                    </div>
-                </div>
-
-                <table id="recentIssuesTable">
-                    <thead>
-                        <tr>
-                            <th>Error Message</th>
-                            <th class="sortable-th" data-col="events">
-                                EVENTS <span class="sort-arrows"><span class="arrow-up">&#9650;</span><span class="arrow-down">&#9660;</span></span>
-                            </th>
-                            <th class="sortable-th" data-col="users">
-                                USERS <span class="sort-arrows"><span class="arrow-up">&#9650;</span><span class="arrow-down">&#9660;</span></span>
-                            </th>
-                            <th class="sortable-th" data-col="time">
-                                LAST SEEN <span class="sort-arrows"><span class="arrow-up">&#9650;</span><span class="arrow-down">&#9660;</span></span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="unresolved critical">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-react">React</span>
-                                </div>
-                                <span class="issue-title">TypeError: Cannot read properties of undefined</span>
-                                <span class="issue-loc">src/components/Dashboard.tsx:84</span>
-                            </td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">1,204</td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">342</td>
-                            <td style="font-family: var(--font-number); color:var(--text-muted);" data-time="2">2 mins ago</td>
-                        </tr>
-                        <tr class="unresolved high">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-next">Next.js</span>
-                                </div>
-                                <span class="issue-title">ReferenceError: window is not defined</span>
-                                <span class="issue-loc">utils/analytics.js:12</span>
-                            </td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">855</td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">129</td>
-                            <td style="font-family: var(--font-number); color:var(--text-muted);" data-time="14">14 mins ago</td>
-                        </tr>
-                        <tr class="resolved">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-api">API</span>
-                                </div>
-                                <span class="issue-title" style="text-decoration:line-through; opacity:0.65;">AxiosError: Request failed with status code 500</span>
-                                <span class="issue-loc">api/userController.ts:201</span>
-                            </td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">102</td>
-                            <td style="font-family: var(--font-number); font-variant-numeric: tabular-nums;">12</td>
-                            <td style="font-family: var(--font-number); color:var(--text-muted);" data-time="60">1 hour ago</td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
 
         </div>
     </main>
 
-    <!-- MODAL OVERLAY FOR ALERT & ASK DIALOG -->
-    <div class="modal-overlay" id="appModalOverlay">
-        <div class="modal-box">
-            <div class="modal-title" id="modalTitle">
-                <span>&#128276; Alert Threshold Exceeded</span>
-            </div>
-            <div class="modal-body" id="modalBody">
-                Critical exception count for <strong>TypeError: Cannot read properties of undefined</strong> has exceeded 1,000 events in the last 1 hour. Immediate developer triage recommended.
-            </div>
-            <div class="modal-actions" id="modalActions">
-                <button class="btn btn-secondary">Dismiss</button>
-                <button class="btn btn-primary">View Issue Details</button>
-            </div>
-        </div>
+    <!-- FLOATING TOAST BADGE CONTAINER -->
+    <div class="toast-badge" id="appToast">
+        <span class="toast-icon" id="toastIcon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <span id="toastMsg">Action completed successfully</span>
     </div>
 
-    
+    <script>
+        let toastTimeout;
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('appToast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            if (!toast || !toastMsg) return;
+
+            toastMsg.innerText = msg;
+
+            if (type === 'copy' || type === 'success') {
+                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                toast.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(16, 185, 129, 0.25)';
+            } else if (type === 'danger') {
+                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+                toast.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(239, 68, 68, 0.25)';
+            } else {
+                toastIcon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+                toast.style.borderColor = 'rgba(59, 130, 246, 0.4)';
+                toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(59, 130, 246, 0.25)';
+            }
+
+            toast.classList.add('show');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function copyDSN() {
+            const input = document.getElementById('dsnInput');
+            const btn = document.getElementById('copyDsnBtn');
+            if (input) {
+                input.select();
+                navigator.clipboard.writeText(input.value).catch(() => document.execCommand('copy'));
+            }
+            if (btn) {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!';
+                btn.style.borderColor = '#10b981';
+                btn.style.color = '#10b981';
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            }
+            showToast('Project DSN Key copied to clipboard', 'copy');
+        }
+
+        // Real invitation — posts to /api/invitations (C12)
+        async function sendInvite() {
+            const email = document.getElementById('inviteEmail');
+            const value = email ? email.value.trim() : '';
+            if (!value || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) {
+                showToast('Please enter a valid member email address', 'danger');
+                return;
+            }
+            const orgId = AppState.currentOrg?.id;
+            if (!orgId) {
+                showToast('No organization selected', 'danger');
+                return;
+            }
+            try {
+                await API.post('/api/invitations/org/' + orgId, { email: value, invite_role: 'member' });
+                showToast('Invitation sent to ' + value, 'success');
+                email.value = '';
+                loadSettings(); // refresh the pending invitations list
+            } catch (err) {
+                showToast(err.message || 'Failed to send invitation', 'danger');
+            }
+        }
+
+        function openDeleteProjectModal() {
+            var modal = document.getElementById('deleteProjectModal');
+            var input = document.getElementById('confirmDeleteInput');
+            var btn = document.getElementById('confirmDeleteBtn');
+            // Use the real project name loaded by app.js (M6)
+            var title = document.getElementById('deleteProjectModalTitle');
+            if (title) {
+                var projName = AppState.currentProject?.name || 'this project';
+                title.textContent = 'Delete "' + projName + '"?';
+            }
+            if (input) { input.value = ''; }
+            if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; }
+            if (modal) {
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function validateDeleteInput() {
+            var input = document.getElementById('confirmDeleteInput');
+            var btn = document.getElementById('confirmDeleteBtn');
+            if (!input || !btn) return;
+            if (input.value.trim() === 'delete-project') {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                btn.style.boxShadow = '0 0 16px rgba(239, 68, 68, 0.4)';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.4';
+                btn.style.cursor = 'not-allowed';
+                btn.style.boxShadow = 'none';
+            }
+        }
+
+        function closeDeleteProjectModal() {
+            var modal = document.getElementById('deleteProjectModal');
+            if (modal) {
+                modal.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
+
+        function closeDeleteModalOnBackdrop(e) {
+            if (e.target === document.getElementById('deleteProjectModal')) {
+                closeDeleteProjectModal();
+            }
+        }
+
+        function confirmDeleteProject() {
+            // Real deletion via app.js deleteProject() → DELETE /api/projects/:id (C10)
+            closeDeleteProjectModal();
+            deleteProject();
+        }
+
+        // ── MOBILE DRAWER CONTROLLER ──
+        function toggleMobDrawer() {
+            var backdrop = document.getElementById('mobDrawerBackdrop');
+            var btn = document.getElementById('mobHamBtn');
+            if (backdrop) {
+                var isOpen = backdrop.classList.toggle('open');
+                if (btn) {
+                    btn.classList.toggle('open', isOpen);
+                }
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            }
+        }
+
+        function closeMobDrawerOnBackdrop(e) {
+            if (e.target === document.getElementById('mobDrawerBackdrop')) {
+                toggleMobDrawer();
+            }
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                var backdrop = document.getElementById('mobDrawerBackdrop');
+                if (backdrop && backdrop.classList.contains('open')) {
+                    toggleMobDrawer();
+                }
+            }
+        });
+    </script>
 
     <!-- COLOR SCHEME GUIDE MODAL -->
-    <div class="color-guide-modal" id="colorGuideModal">
+    <div class="color-guide-modal" id="colorGuideModal" onclick="closeColorGuideOnBackdrop(event)">
         <div class="color-guide-box">
             <div class="color-guide-header">
                 <h3>
@@ -1707,7 +1535,7 @@
                     </div>
                     BugRadar Color Scheme Guide
                 </h3>
-                <button class="color-guide-close">✕</button>
+                <button class="color-guide-close" onclick="toggleColorGuideModal()">✕</button>
             </div>
 
             <div class="guide-section-title">Severity & Status Differentiation</div>
@@ -1769,13 +1597,55 @@
         </div>
     </div>
 
-    
+    <script>
+        function toggleColorGuideModal() {
+            var modal = document.getElementById('colorGuideModal');
+            if (modal) {
+                modal.classList.toggle('open');
+            }
+        }
+        function closeColorGuideOnBackdrop(e) {
+            if (e.target === document.getElementById('colorGuideModal')) {
+                toggleColorGuideModal();
+            }
+        }
+    </script>
+
+    <!-- DELETE PROJECT CONFIRMATION MODAL (WITH TYPE-TO-CONFIRM INPUT) -->
+    <div class="delete-modal-backdrop" id="deleteProjectModal" onclick="closeDeleteModalOnBackdrop(event)">
+        <div class="delete-modal-box">
+            <div class="delete-modal-header">
+                <div class="delete-icon-wrapper">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <div>
+                    <div class="delete-modal-title" id="deleteProjectModalTitle">Delete project?</div>
+                    <div style="font-size: 12px; color: #ef4444; font-weight: 600;">This action is permanent and cannot be undone</div>
+                </div>
+            </div>
+
+            <div class="delete-modal-desc">
+                Are you sure you want to delete this project? All associated exception logs, performance telemetry, breadcrumb traces, and alert threshold rules will be permanently removed.
+            </div>
+
+            <div style="margin: 4px 0 6px;">
+                <label style="display:block; font-size:12px; font-weight:600; color:#e4e4e7; margin-bottom:8px;">
+                    To confirm deletion, type <code style="background:rgba(239,68,68,0.15); color:#f87171; padding:2px 6px; border-radius:4px; font-family:var(--font-mono);">delete-project</code> below:
+                </label>
+                <input type="text" id="confirmDeleteInput" class="form-input" placeholder="Type 'delete-project' to confirm" oninput="validateDeleteInput()" style="background:#09090d; border-color:#272736;">
+            </div>
+
+            <div class="delete-modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteProjectModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn" disabled onclick="confirmDeleteProject()" style="opacity: 0.4; cursor: not-allowed;">Permanently Delete</button>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
-    <script src="dashboard.js"></script>
-
-    
-
-
 </body>
 </html>

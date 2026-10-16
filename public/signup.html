@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log In — BugRadar™</title>
+    <title>Sign Up — BugRadar™</title>
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,34 +48,34 @@
     </nav>
 
     <!-- ================================================================= -->
-    <!-- CENTER LOGIN CARD                                                 -->
+    <!-- CENTER SIGN UP CARD                                               -->
     <!-- ================================================================= -->
-    <main class="main-container">
+    <main class="main-container" style="max-width: 440px; padding-top: 40px; padding-bottom: 40px;">
         <div class="card-box">
             
             <!-- Card Header -->
             <div class="card-header">
-                <h1 class="card-title">Log In to BugRadar</h1>
-                <p class="card-subtitle">Performance meets scale. Enter your credentials to access your workspace.</p>
+                <h1 class="card-title">Create your account</h1>
+                <p class="card-subtitle">Performance meets scale. Get started with error tracking in under 2 minutes.</p>
             </div>
 
-            <!-- Login Form -->
-            <form id="login-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
+            <!-- Sign Up Form -->
+            <form id="signup-form" style="display: flex; flex-direction: column; gap: var(--space-4);">
                 
-                <!-- Email Field -->
+                <!-- Full Name Field -->
                 <div class="form-group">
-                    <label for="email" class="form-label">Your Email</label>
+                    <label for="fullname" class="form-label">Full Name</label>
                     <div class="input-wrapper">
                         <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
+                            type="text" 
+                            id="fullname" 
+                            name="fullname" 
                             class="form-input" 
-                            placeholder="name@company.com" 
+                            placeholder="Sarah Jenkins" 
                             required 
-                            autocomplete="email"
+                            autocomplete="name"
                         >
-                        <span class="input-icon-btn" title="User Email">
+                        <span class="input-icon-btn" title="Full Name">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
@@ -84,9 +84,31 @@
                     </div>
                 </div>
 
+                <!-- Work Email Field -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Work Email</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            class="form-input" 
+                            placeholder="sarah@company.com" 
+                            required 
+                            autocomplete="email"
+                        >
+                        <span class="input-icon-btn" title="Work Email">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+
                 <!-- Password Field -->
                 <div class="form-group">
-                    <label for="password" class="form-label">Your Password</label>
+                    <label for="password" class="form-label">Password</label>
                     <div class="input-wrapper">
                         <input 
                             type="password" 
@@ -95,40 +117,44 @@
                             class="form-input" 
                             placeholder="••••••••••••" 
                             required 
-                            autocomplete="current-password"
+                            autocomplete="new-password"
+                            oninput="updatePasswordStrength(this.value)"
                         >
-                        <button type="button" class="input-icon-btn" id="password-toggle" aria-label="Toggle password visibility">
+                        <button type="button" class="input-icon-btn" onclick="togglePasswordVisibility()" aria-label="Toggle password visibility">
                             <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
                             </svg>
                         </button>
                     </div>
+                    <!-- Password strength meter (styles in style.css) -->
+                    <div class="password-strength-bar">
+                        <div class="password-strength-fill" id="strength-fill"></div>
+                    </div>
                 </div>
 
-                <!-- Remember Me & Forgot Password Row -->
-                <div class="options-row">
-                    <label class="remember-me">
-                        <input type="checkbox" id="remember" class="remember-checkbox" checked>
-                        <span>Remember me</span>
+                <!-- Terms and Privacy Checkbox -->
+                <div class="terms-row">
+                    <input type="checkbox" id="terms" class="terms-checkbox" required>
+                    <label for="terms">
+                        I agree to BugRadar's Terms of Service and Privacy Policy.
                     </label>
-                    <a href="#" class="forgot-link">Forgotten?</a>
                 </div>
 
-                <!-- Primary Log In CTA -->
-                <button type="submit" class="btn-primary" id="login-btn">
-                    <span>Log In</span>
+                <!-- Primary Create Account CTA -->
+                <button type="submit" class="btn-primary" id="signup-btn">
+                    <span>Create Account</span>
                 </button>
             </form>
 
             <!-- Divider -->
             <div class="divider">
-                <span>Don't have an account?</span>
+                <span>Already have an account?</span>
             </div>
 
-            <!-- Secondary Sign Up Button Link -->
-            <a href="signup.html" class="btn-secondary">
-                Sign Up
+            <!-- Secondary Log In Button Link -->
+            <a href="login.html" class="btn-secondary">
+                Log In
             </a>
 
         </div>

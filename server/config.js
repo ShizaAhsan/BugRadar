@@ -17,6 +17,17 @@ if (isProduction) {
   }
 }
 
+// pm2 workers evaluate this file separately (QA-BUG-REPORT.md M17). Without explicit
+// JWT secrets, every worker generates its own random secret in dev mode, causing
+// intermittent "Invalid token" 401s depending on which worker answers — fail fast.
+if (!isProduction && process.env.NODE_APP_INSTANCE !== undefined &&
+    (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET)) {
+  console.error('FATAL: Running under pm2 without JWT_ACCESS_SECRET/JWT_REFRESH_SECRET set.');
+  console.error('Each worker would generate a different random secret → intermittent 401s.');
+  console.error('Export both secrets in the environment, or start pm2 with --env production.');
+  process.exit(1);
+}
+
 module.exports = {
   port: process.env.PORT || 3000,
   nodeEnv: process.env.NODE_ENV || 'development',

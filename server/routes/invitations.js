@@ -2,14 +2,22 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { isUUID } = require('../validate');
 const { sendEmail, generateInviteEmail } = require('../email');
 const config = require('../config');
 
 const router = express.Router();
 
-router.use(authenticate);
+// The accept endpoint must also work for unauthenticated visitors (they get sent to
+// login first) and for cookie-based browser sessions, so it authenticates manually
+// instead of going through the global middleware (QA-BUG-REPORT.md C13).
+router.use((req, res, next) => {
+  if (req.method === 'GET' && req.path.startsWith('/accept/')) return next();
+  return authenticate(req, res, next);
+});
 
 async function checkOrgAccess(orgId, userId) {
+  if (!isUUID(orgId)) return null; // malformed id => no access (QA-BUG-REPORT.md B11)
   const membership = await query(
     'SELECT role FROM memberships WHERE user_id = $1 AND organization_id = $2',
     [userId, orgId]
@@ -120,11 +128,14 @@ router.post('/org/:orgId', async (req, res) => {
   }
 });
 
-// Accept invitation (public endpoint - no auth required)
+// Accept invitation — public entry point: resolves auth manually from a Bearer
+// header OR the httpOnly access cookie, so both fetch() clients and browsers work
+// (QA-BUG-REPORT.md C13).
 router.get('/accept/:token', async (req, res) => {
-  try {
-    const { token } = req.params;
+  const wantsHtml = String(req.headers.accept || '').includes('text/html');
+  const { token } = req.params;
 
+  try {
     const result = await query(
       `SELECT * FROM invitations
        WHERE token = $1 AND accepted = FALSE AND expires_at > NOW()`,
@@ -132,59 +143,68 @@ router.get('/accept/:token', async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      if (wantsHtml) return res.redirect('/login.html?invite=invalid');
       return res.status(400).json({ error: 'Invalid or expired invitation' });
     }
 
     const invitation = result.rows[0];
 
-    // Check if user is logged in
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.redirect(`/login.html?invite=${token}`);
-    }
-
-    const jwt = require('jsonwebtoken');
-    const tokenValue = authHeader.replace('Bearer ', '');
+    // Resolve the current user from Bearer header or cookie (no hard 401 for visitors)
+    let user = null;
     try {
-      const decoded = jwt.verify(tokenValue, config.jwt.accessSecret);
-      const userResult = await query('SELECT id, email FROM users WHERE id = $1', [decoded.userId]);
-
-      if (userResult.rows.length === 0) {
-        return res.redirect(`/login.html?invite=${token}`);
+      const jwt = require('jsonwebtoken');
+      const candidate = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.accessToken;
+      if (candidate) {
+        const decoded = jwt.verify(candidate, config.jwt.accessSecret);
+        const userResult = await query('SELECT id, email FROM users WHERE id = $1', [decoded.userId]);
+        if (userResult.rows.length > 0) user = userResult.rows[0];
       }
-
-      const user = userResult.rows[0];
-
-      // Check email matches invitation
-      if (user.email !== invitation.email) {
-        return res.status(403).json({ error: 'This invitation is for a different email address' });
-      }
-
-      // Add user to organization
-      await query(
-        `INSERT INTO memberships (user_id, organization_id, role)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (user_id, organization_id) DO NOTHING`,
-        [user.id, invitation.organization_id, invitation.role]
-      );
-
-      // Mark invitation as accepted
-      await query(
-        'UPDATE invitations SET accepted = TRUE WHERE id = $1',
-        [invitation.id]
-      );
-
-      // Audit log
-      await query(
-        `INSERT INTO audit_log (organization_id, user_id, action, details)
-         VALUES ($1, $2, $3, $4)`,
-        [invitation.organization_id, user.id, 'member.joined', JSON.stringify({ invited_email: invitation.email })]
-      );
-
-      res.redirect('/dashboard.html');
     } catch (err) {
-      return res.redirect(`/login.html?invite=${token}`);
+      user = null; // expired/invalid token → treat as anonymous
     }
+
+    if (!user) {
+      // Not logged in: send browsers to login (carrying the invite), tell fetch clients JSON
+      if (wantsHtml) return res.redirect(`/login.html?invite=${token}`);
+      return res.status(401).json({
+        error: 'Login required to accept this invitation',
+        code: 'LOGIN_REQUIRED',
+        invite: token,
+      });
+    }
+
+    // Check email matches invitation
+    if (user.email !== invitation.email) {
+      return res.status(403).json({ error: 'This invitation is for a different email address' });
+    }
+
+    // Add user to organization
+    await query(
+      `INSERT INTO memberships (user_id, organization_id, role)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, organization_id) DO NOTHING`,
+      [user.id, invitation.organization_id, invitation.role]
+    );
+
+    // Mark invitation as accepted
+    await query(
+      'UPDATE invitations SET accepted = TRUE WHERE id = $1',
+      [invitation.id]
+    );
+
+    // Audit log
+    await query(
+      `INSERT INTO audit_log (organization_id, user_id, action, details)
+       VALUES ($1, $2, $3, $4)`,
+      [invitation.organization_id, user.id, 'member.joined', JSON.stringify({ invited_email: invitation.email })]
+    );
+
+    if (wantsHtml) return res.redirect('/dashboard.html');
+    res.json({
+      success: true,
+      organization_id: invitation.organization_id,
+      role: invitation.role,
+    });
   } catch (err) {
     console.error('Accept invitation error:', err);
     res.status(500).json({ error: 'Failed to accept invitation' });
@@ -194,6 +214,10 @@ router.get('/accept/:token', async (req, res) => {
 // Cancel/delete invitation
 router.delete('/:invitationId', async (req, res) => {
   try {
+    if (!isUUID(req.params.invitationId)) {
+      return res.status(404).json({ error: 'Invitation not found' });
+    }
+
     const inviteResult = await query(
       'SELECT * FROM invitations WHERE id = $1',
       [req.params.invitationId]

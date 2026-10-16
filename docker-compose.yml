@@ -1,21 +1,45 @@
 services:
   app:
     build: .
+    ports:
+      # Published so `curl localhost:3000` and browser access work directly;
+      # nginx additionally fronts it on 80/443 (QA-BUG-REPORT.md D2)
+      - "3000:3000"
     env_file:
       - .env
     environment:
       NODE_ENV: production
       PORT: 3000
-      DB_HOST: ${DB_HOST}
+      DB_HOST: ${DB_HOST:-postgres}
       DB_PORT: ${DB_PORT:-5432}
-      DB_USER: ${DB_USER}
-      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER:-bugradar}
+      DB_NAME: ${DB_NAME:-bugradar}
+      DB_PASSWORD: ${DB_PASSWORD:-bugradar_secret}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       CORS_ORIGIN: ${CORS_ORIGIN}
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - bugradar
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-bugradar}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bugradar_secret}
+      POSTGRES_DB: ${DB_NAME:-bugradar}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bugradar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
     networks:
       - bugradar
@@ -60,6 +84,7 @@ services:
       - bugradar
 
 volumes:
+  postgres_data:
   redis_data:
 
 networks:

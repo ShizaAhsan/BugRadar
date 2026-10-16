@@ -6,10 +6,13 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "nodemon server/index.js",
-    "worker": "node server/workers/eventProcessor.js",
+    "worker": "node server/workers/retention.js",
     "migrate": "node server/migrations/run.js",
     "seed": "node server/migrations/seed.js",
-    "test": "echo \"No test runner configured yet\"",
+    "setup-db": "node setup-db.js",
+    "test": "node test-full.js",
+    "test:full": "node test-full.js",
+    "test:issues": "node test-issues.js",
     "test:ingestion": "node test-ingestion.js"
   },
   "dependencies": {

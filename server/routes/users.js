@@ -1,10 +1,24 @@
 const express = require('express');
 const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
+const { isUUID } = require('../validate');
 
 const router = express.Router();
 
 router.use(authenticate);
+
+// Malformed ids must 404/400 instead of raising Postgres UUID errors (QA-BUG-REPORT.md B11)
+function requireValidIds(req, res) {
+  if (!isUUID(req.params.orgId)) {
+    res.status(404).json({ error: 'Organization not found' });
+    return false;
+  }
+  if (req.params.userId !== undefined && !isUUID(req.params.userId)) {
+    res.status(404).json({ error: 'User not found in this organization' });
+    return false;
+  }
+  return true;
+}
 
 router.get('/me', async (req, res) => {
   try {
@@ -59,6 +73,7 @@ router.patch('/me', async (req, res) => {
 
 router.get('/org/:orgId', async (req, res) => {
   try {
+    if (!requireValidIds(req, res)) return;
     const membership = await query(
       'SELECT role FROM memberships WHERE user_id = $1 AND organization_id = $2',
       [req.user.id, req.params.orgId]
@@ -83,6 +98,7 @@ router.get('/org/:orgId', async (req, res) => {
 
 router.get('/org/:orgId/:userId', async (req, res) => {
   try {
+    if (!requireValidIds(req, res)) return;
     const membership = await query(
       'SELECT role FROM memberships WHERE user_id = $1 AND organization_id = $2',
       [req.user.id, req.params.orgId]

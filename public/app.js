@@ -26,6 +26,11 @@ const API = {
       if (refreshed) {
         opts.headers['Authorization'] = 'Bearer ' + this.token;
         const retry = await fetch(this.baseUrl + path, opts);
+        // The retried request can still fail — don't hand 4xx/5xx bodies to callers (M1)
+        if (!retry.ok) {
+          const retryData = await retry.json().catch(() => null);
+          throw { status: retry.status, message: retryData?.error || 'Request failed' };
+        }
         return retry.json().catch(() => null);
       }
       window.location.href = '/login.html';
@@ -49,6 +54,8 @@ const API = {
       if (!res.ok) return false;
       const data = await res.json();
       this.token = data.accessToken;
+      // Sync the localStorage copy so later Bearer retries never send a stale token (M2)
+      localStorage.setItem('br_token', data.accessToken);
       return true;
     } catch { return false; }
   },
@@ -90,8 +97,10 @@ const AppState = {
   },
 
   setCurrentOrg(orgId) {
-    this.currentOrg = this.organizations.find(o => o.id === orgId);
-    if (this.currentOrg) localStorage.setItem('br_org', this.currentOrg.id);
+    this.currentOrg = this.organizations.find(o => o.id === orgId) || null;
+    // Persist the raw id even when the org isn't in the loaded list yet (right after
+    // creation, before /me is refetched) so Settings/Billing don't early-return (M3)
+    if (orgId) localStorage.setItem('br_org', orgId);
   },
 
   async loadProject(projectId) {
@@ -166,6 +175,17 @@ function statusBadge(status) {
   return `<span style="display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;background:${colors[status] || '#71717a'}22;border:1px solid ${colors[status] || '#71717a'}55;color:${colors[status] || '#71717a'}">${status}</span>`;
 }
 
+// Map stored severities (Sentry-style) onto the UI's severity scale
+const SEVERITY_PILL_CLASS = {
+  fatal: 'critical', error: 'high', warning: 'medium', info: 'low', debug: 'low',
+  critical: 'critical', high: 'high', medium: 'medium', low: 'low'
+};
+const SEVERITY_PILL_LABEL = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+function severityPill(severity) {
+  const cls = SEVERITY_PILL_CLASS[severity] || 'high';
+  return `<span class="severity-pill ${cls}">${SEVERITY_PILL_LABEL[cls]}</span>`;
+}
+
 function showToast(message, type = 'success') {
   let container = document.getElementById('toast-container');
   if (!container) {
@@ -199,7 +219,15 @@ async function handleLoginSubmit(event) {
     const data = await API.post('/api/auth/login', { email, password });
     API.setToken(data.accessToken);
     btn.innerHTML = '<span style="color:#fff">✓ Logged In</span>';
-    setTimeout(() => { window.location.href = '/dashboard.html'; }, 500);
+    // Resume a pending invitation instead of dropping it on the floor (C13)
+    const pendingInvite = localStorage.getItem('br_invite_token');
+    setTimeout(() => {
+      if (pendingInvite) {
+        window.location.href = '/invite.html?token=' + encodeURIComponent(pendingInvite);
+      } else {
+        window.location.href = '/dashboard.html';
+      }
+    }, 500);
   } catch (err) {
     btn.innerHTML = '<span>Log In</span>';
     btn.disabled = false;
@@ -211,7 +239,6 @@ async function handleSignUpSubmit(event) {
   event.preventDefault();
   const name = document.getElementById('fullname')?.value || document.getElementById('name')?.value;
   const email = document.getElementById('email').value;
-  const orgname = document.getElementById('orgname')?.value;
   const password = document.getElementById('password').value;
   const terms = document.getElementById('terms')?.checked;
   const btn = document.getElementById('signup-btn');
@@ -230,17 +257,13 @@ async function handleSignUpSubmit(event) {
     });
     API.setToken(data.accessToken);
 
-    // If org name provided, create org during signup
-    if (orgname) {
-      const slug = orgname.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const org = await API.post('/api/orgs', { name: orgname, slug });
-      AppState.setCurrentOrg(org.id);
-    }
+    // Organization is created in onboarding only — creating it here as well caused
+    // duplicate orgs / 409 slug conflicts (QA-BUG-REPORT.md C8)
 
     btn.innerHTML = '<span style="color:#fff">✓ Account Created</span>';
     setTimeout(() => { window.location.href = '/onboarding.html'; }, 500);
   } catch (err) {
-    btn.innerHTML = '<span>Create Account & Workspace</span>';
+    btn.innerHTML = '<span>Create Account</span>';
     btn.disabled = false;
     showToast(err.message || 'Signup failed', 'error');
   }
@@ -269,7 +292,22 @@ async function handleOnboardingSubmit(event) {
 
   try {
     const slug = orgName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const org = await API.post('/api/orgs', { name: orgName, slug });
+
+    // Reuse an org that already exists (409) instead of stranding the user (C8)
+    let org;
+    try {
+      org = await API.post('/api/orgs', { name: orgName, slug });
+    } catch (orgErr) {
+      if (orgErr.status === 409) {
+        await AppState.load();
+        org = AppState.organizations.find(o => (o.name || '').toLowerCase() === orgName.toLowerCase())
+           || AppState.organizations.find(o => o.slug === slug)
+           || AppState.organizations[0];
+        if (!org) throw { message: 'Organization already exists but could not be loaded' };
+      } else {
+        throw orgErr;
+      }
+    }
     AppState.setCurrentOrg(org.id);
 
     const project = await API.post('/api/projects/org/' + org.id, {
@@ -327,19 +365,53 @@ async function loadDashboard() {
     if (resolvedEl) resolvedEl.textContent = stats.stats.resolved;
     if (totalEl) totalEl.textContent = stats.stats.total;
 
-    // Update sidebar nav badge
-    const navBadge = $('.nav-badge');
-    if (navBadge) navBadge.textContent = stats.stats.unresolved;
+    // Update sidebar nav badges (desktop + mobile)
+    $$('.nav-badge, .mob-nav-badge').forEach(b => b.textContent = stats.stats.unresolved);
 
-    // Render chart
-    renderEventsChart(stats.eventsPerDay);
+    // Big KPI: real event totals + day-over-day change (C2)
+    const eventsPerDay = stats.eventsPerDay || [];
+    const eventsTotal = eventsPerDay.reduce((s, d) => s + (parseInt(d.count, 10) || 0), 0);
+    const kpiEl = $('#kpiBigValue');
+    if (kpiEl) kpiEl.textContent = eventsTotal.toLocaleString();
+    const kpiText = $('#kpi-subtitle-text');
+    if (kpiText) {
+      if (eventsPerDay.length >= 2) {
+        const last = parseInt(eventsPerDay[eventsPerDay.length - 1].count, 10) || 0;
+        const prev = parseInt(eventsPerDay[eventsPerDay.length - 2].count, 10) || 0;
+        if (prev > 0) {
+          const pct = (((last - prev) / prev) * 100).toFixed(1);
+          kpiText.textContent = (pct >= 0 ? '+' : '') + pct + '% vs previous day';
+        } else {
+          kpiText.textContent = 'Events captured in the last 30 days';
+        }
+      } else {
+        kpiText.textContent = 'Events captured in the last 30 days';
+      }
+    }
 
-    // Render recent issues table
+    // Feed the dashboard SVG chart (dashboard.js) with real data (C2/M9)
+    if (window.updateBugRadarGraph && eventsPerDay.length > 0) {
+      const axisLabel = d => new Date(String(d).slice(0, 10) + 'T00:00:00')
+        .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const labels30 = eventsPerDay.map(d => axisLabel(d.date));
+      const values30 = eventsPerDay.map(d => parseInt(d.count, 10) || 0);
+      window.updateBugRadarGraph('30D', labels30, values30);
+      window.updateBugRadarGraph('7D', labels30.slice(-7), values30.slice(-7));
+    }
+
+    // Render recent issues table (rows link via ?id=...)
     renderDashboardIssues(stats.topIssues);
 
-    // Update project name in sidebar
-    const sidebarTitle = $('.sidebar-page-title h2 .bold');
-    if (sidebarTitle) sidebarTitle.textContent = project.name;
+    // Sidebar subtitle: project name in a dedicated element — never overwrite the
+    // page title's .bold span (QA-BUG-REPORT.md M7)
+    const sidebarProj = $('#sidebar-project-name');
+    if (sidebarProj) sidebarProj.textContent = project.name + ' · ';
+
+    // Breadcrumb + header pill from real project data (M6)
+    const crumb = $('#crumb-project');
+    if (crumb) crumb.textContent = project.name;
+    const projPill = $('#header-project-pill');
+    if (projPill) projPill.textContent = 'Project: ' + project.name;
 
     // Update DSN display
     const dsnEl = $('#project-dsn');
@@ -358,52 +430,6 @@ function showEmptyDashboard() {
   if (unresolvedEl) unresolvedEl.textContent = '0';
   if (resolvedEl) resolvedEl.textContent = '0';
   if (totalEl) totalEl.textContent = '0';
-}
-
-function renderEventsChart(eventsPerDay) {
-  const container = $('#events-chart');
-  if (!container || !eventsPerDay || eventsPerDay.length === 0) return;
-
-  const max = Math.max(...eventsPerDay.map(e => parseInt(e.count)), 1);
-  const width = container.offsetWidth || 600;
-  const height = 180;
-  const padding = 20;
-
-  let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
-
-  // Grid lines
-  for (let i = 0; i <= 4; i++) {
-    const y = padding + (i / 4) * (height - 2 * padding);
-    svg += `<line x1="${padding}" y1="${y}" x2="${width - padding}" y2="${y}" stroke="#1f1f26" stroke-width="1"/>`;
-  }
-
-  if (eventsPerDay.length > 1) {
-    const step = (width - 2 * padding) / (eventsPerDay.length - 1);
-    let points = '';
-    let areaPoints = `${padding},${height - padding} `;
-
-    eventsPerDay.forEach((e, i) => {
-      const x = padding + i * step;
-      const y = height - padding - (parseInt(e.count) / max) * (height - 2 * padding);
-      points += `${x},${y} `;
-      areaPoints += `${x},${y} `;
-    });
-
-    areaPoints += `${padding + (eventsPerDay.length - 1) * step},${height - padding}`;
-
-    svg += `<polygon points="${areaPoints}" fill="url(#chartGradient)" opacity="0.3"/>`;
-    svg += `<polyline points="${points}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>`;
-
-    eventsPerDay.forEach((e, i) => {
-      const x = padding + i * step;
-      const y = height - padding - (parseInt(e.count) / max) * (height - 2 * padding);
-      svg += `<circle cx="${x}" cy="${y}" r="3.5" fill="#3b82f6" stroke="#0d0d11" stroke-width="2"/>`;
-    });
-  }
-
-  svg += `<defs><linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>`;
-  svg += '</svg>';
-  container.innerHTML = svg;
 }
 
 function renderDashboardIssues(issues) {
@@ -426,6 +452,9 @@ function renderDashboardIssues(issues) {
       <td class="number-font" style="color:var(--text-muted)">${timeAgo(issue.last_seen)}</td>
     </tr>
   `).join('');
+
+  // Real data for the dashboard search dropdown (replaces the old fake index — M9)
+  window.dashboardSearchData = issues;
 }
 
 /* --------------------------------------------------------------------------
@@ -433,8 +462,10 @@ function renderDashboardIssues(issues) {
    -------------------------------------------------------------------------- */
 let issuesCurrentPage = 1;
 let issuesCurrentStatus = '';
+let issuesCurrentSeverity = '';
 let issuesCurrentSearch = '';
-let issuesCurrentSort = 'last_seen';
+let issuesCurrentSort = 'time';
+let issuesCurrentSince = '24h';
 
 async function loadIssues() {
   const projectId = localStorage.getItem('br_project');
@@ -447,12 +478,16 @@ async function loadIssues() {
       sort: issuesCurrentSort,
     });
     if (issuesCurrentStatus) params.set('status', issuesCurrentStatus);
+    if (issuesCurrentSeverity) params.set('severity', issuesCurrentSeverity);
     if (issuesCurrentSearch) params.set('search', issuesCurrentSearch);
+    if (issuesCurrentSince) params.set('since', issuesCurrentSince);
 
     const data = await API.get('/api/issues/project/' + projectId + '?' + params.toString());
     renderIssuesTable(data.issues, data.total, data.page, data.limit);
   } catch (err) {
     console.error('Issues load error:', err);
+    const tbody = $('#issues-table-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">${escapeHtml(err.message || 'Failed to load issues')}</td></tr>`;
   }
 }
 
@@ -468,16 +503,17 @@ function renderIssuesTable(issues, total, page, limit) {
     return;
   }
 
+  // Columns match the issues.html table header: details / severity / events / users / last seen
   tbody.innerHTML = issues.map(issue => `
-    <tr class="${issue.status}" style="cursor:pointer" onclick="window.location.href='/issue-detail.html?id=${issue.id}'">
+    <tr class="severity-${SEVERITY_PILL_CLASS[issue.severity] || 'high'} ${issue.status}" style="cursor:pointer" onclick="window.location.href='/issue-detail.html?id=${issue.id}'">
       <td>
         <span class="issue-title">${escapeHtml(issue.title)}</span>
         <span class="issue-loc">${escapeHtml(issue.culprit || '')}</span>
       </td>
-      <td>${statusBadge(issue.status)}</td>
-      <td class="number-font" style="font-weight:600">${issue.event_count}</td>
-      <td style="color:var(--text-muted);font-size:12px">${issue.assignee_name ? escapeHtml(issue.assignee_name) : '<span style="opacity:0.4">Unassigned</span>'}</td>
-      <td class="number-font" style="color:var(--text-muted)">${timeAgo(issue.last_seen)}</td>
+      <td>${severityPill(issue.severity)}</td>
+      <td><span class="count-val">${issue.event_count}</span></td>
+      <td><span class="count-val">${issue.user_count ?? 0}</span></td>
+      <td><span class="time-val" data-time="${new Date(issue.last_seen).getTime()}">${timeAgo(issue.last_seen)}</span></td>
     </tr>
   `).join('');
 
@@ -503,19 +539,6 @@ function updateIssuesPagination(totalPages, currentPage) {
 
 function issuesGoPage(page) {
   issuesCurrentPage = page;
-  loadIssues();
-}
-
-function issuesFilterStatus(status) {
-  issuesCurrentStatus = status;
-  issuesCurrentPage = 1;
-  $$('#statusFilterPills .table-pill-btn').forEach(b => b.classList.remove('active'));
-  if (status === '') $$('#statusFilterPills .table-pill-btn')[0]?.classList.add('active');
-  else {
-    $$('#statusFilterPills .table-pill-btn').forEach(b => {
-      if (b.textContent.toLowerCase().includes(status)) b.classList.add('active');
-    });
-  }
   loadIssues();
 }
 
@@ -724,7 +747,14 @@ async function updateIssueStatus(status) {
    -------------------------------------------------------------------------- */
 async function loadAlerts() {
   const projectId = localStorage.getItem('br_project');
-  if (!projectId) return;
+  const noProjectMsg = '<div style="padding:20px;color:var(--text-muted);font-size:13px;text-align:center">No project selected yet — create a project during onboarding first.</div>';
+  if (!projectId) {
+    const rulesC = $('#alert-rules-list');
+    const histC = $('#alert-history-list');
+    if (rulesC) rulesC.innerHTML = noProjectMsg;
+    if (histC) histC.innerHTML = noProjectMsg;
+    return;
+  }
 
   try {
     const [rules, history] = await Promise.all([
@@ -734,8 +764,23 @@ async function loadAlerts() {
 
     renderAlertRules(rules);
     renderAlertHistory(history);
+
+    // Metric cards from real data
+    const mRules = $('#metric-rules');
+    if (mRules) mRules.textContent = (rules || []).filter(r => r.enabled).length;
+    const dayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
+    const fired24h = (history || []).filter(h => new Date(h.triggered_at).getTime() > dayAgoMs).length;
+    const mFired = $('#metric-fired');
+    if (mFired) mFired.textContent = fired24h;
+    const mTotal = $('#metric-total');
+    if (mTotal) mTotal.textContent = (history || []).length;
   } catch (err) {
     console.error('Alerts load error:', err);
+    const errMsg = `<div style="padding:20px;color:var(--error-red, #ef4444);font-size:13px;text-align:center">Failed to load alerts: ${escapeHtml(err.message || 'unknown error')}</div>`;
+    const rulesC = $('#alert-rules-list');
+    const histC = $('#alert-history-list');
+    if (rulesC) rulesC.innerHTML = errMsg;
+    if (histC) histC.innerHTML = errMsg;
   }
 }
 
@@ -753,8 +798,8 @@ function renderAlertRules(rules) {
       <div>
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">${escapeHtml(rule.name)}</div>
         <div style="font-size:12px;color:var(--text-muted)">
-          ${rule.trigger_type === 'new_issue' ? 'When new issue created' : `Spike: >${rule.threshold} in ${rule.window_minutes}min`}
-          · ${rule.channel}
+          ${rule.trigger_type === 'new_issue' ? 'When new issue created' : `Spike: >${escapeHtml(String(rule.threshold))} in ${escapeHtml(String(rule.window_minutes))}min`}
+          · ${escapeHtml(rule.channel)}
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
@@ -779,7 +824,7 @@ function renderAlertHistory(history) {
       <div style="width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-top:5px;flex-shrink:0"></div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:500">${escapeHtml(h.rule_name)}</div>
-        <div style="font-size:12px;color:var(--text-muted)">${escapeHtml(h.issue_title || 'Unknown issue')} · ${formatDateTime(h.triggered_at)}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${escapeHtml(h.issue_title || 'Unknown issue')} · ${formatDateTime(h.triggered_at)}${h.issue_id ? ` · <a href="/issue-detail.html?id=${h.issue_id}" style="color:var(--accent-blue, #3b82f6)">View issue</a>` : ''}</div>
       </div>
     </div>
   `).join('');
@@ -787,21 +832,38 @@ function renderAlertHistory(history) {
 
 async function createAlertRule() {
   const projectId = localStorage.getItem('br_project');
-  if (!projectId) return;
+  if (!projectId) {
+    showToast('No project selected', 'error');
+    return;
+  }
 
   const name = prompt('Alert rule name:');
   if (!name) return;
 
   const triggerType = prompt('Trigger type (new_issue or spike):', 'new_issue');
   if (!triggerType) return;
+  if (!['new_issue', 'spike'].includes(triggerType)) {
+    showToast('Trigger type must be new_issue or spike', 'error');
+    return;
+  }
 
   const channel = prompt('Channel (email or webhook):', 'email');
+  if (channel && !['email', 'webhook'].includes(channel)) {
+    showToast('Channel must be email or webhook', 'error');
+    return;
+  }
 
   try {
     const body = { name, trigger_type: triggerType, channel: channel || 'email' };
     if (triggerType === 'spike') {
-      body.threshold = parseInt(prompt('Threshold (events count):', '10'), 10);
-      body.window_minutes = parseInt(prompt('Window (minutes):', '5'), 10);
+      const threshold = parseInt(prompt('Threshold (events count):', '10'), 10);
+      const windowMinutes = parseInt(prompt('Window (minutes):', '5'), 10);
+      if (!Number.isFinite(threshold) || threshold < 1 || !Number.isFinite(windowMinutes) || windowMinutes < 1) {
+        showToast('Spike rules need a numeric threshold and window', 'error');
+        return;
+      }
+      body.threshold = threshold;
+      body.window_minutes = windowMinutes;
     }
 
     await API.post('/api/alerts/project/' + projectId, body);
@@ -829,7 +891,14 @@ async function deleteAlertRule(ruleId) {
 async function loadSettings() {
   const projectId = localStorage.getItem('br_project');
   const orgId = AppState.currentOrg?.id;
-  if (!projectId || !orgId) return;
+  if (!projectId || !orgId) {
+    const msg = '<div style="padding:16px;color:var(--text-muted);font-size:12px;text-align:center">No project selected yet — complete onboarding first.</div>';
+    const teamC = $('#team-members-list');
+    const invC = $('#pending-invitations-list');
+    if (teamC) teamC.innerHTML = msg;
+    if (invC) invC.innerHTML = msg;
+    return;
+  }
 
   try {
     const [project, members, invitations] = await Promise.all([
@@ -838,14 +907,17 @@ async function loadSettings() {
       API.get('/api/invitations/org/' + orgId).catch(() => [])
     ]);
 
+    AppState.currentProject = project;
+
     // Project info
     const nameEl = $('#setting-project-name');
     const platformEl = $('#setting-project-platform');
-    const dsnEl = $('#setting-dsn-value');
+    const dsnEl = $('#dsnInput');
 
     if (nameEl) nameEl.value = project.name;
-    if (platformEl) platformEl.textContent = project.platform;
-    if (dsnEl) dsnEl.textContent = project.dsn_key;
+    if (platformEl) platformEl.value = project.platform;
+    // Show the full, copy-pasteable ingest URL (matches the SDK docs)
+    if (dsnEl) dsnEl.value = window.location.origin + '/ingest/' + project.dsn_key + '/store/';
 
     // Team members
     renderTeamMembers(members);
@@ -880,9 +952,9 @@ function renderTeamMembers(members) {
       <tbody>
         ${members.map(m => `
           <tr>
-            <td><strong>${escapeHtml(m.name || 'Unknown')}</strong>${m.user_id === AppState.user?.id ? ' (You)' : ''}</td>
+            <td><strong>${escapeHtml(m.name || 'Unknown')}</strong>${m.id === AppState.user?.id ? ' (You)' : ''}</td>
             <td class="number-font">${escapeHtml(m.email)}</td>
-            <td><span class="role-badge" style="${m.role === 'owner' ? 'background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)' : m.role === 'admin' ? 'background:rgba(6,182,212,0.15);color:#22d3ee;border-color:rgba(6,182,212,0.3)' : ''}">${m.role}</span></td>
+            <td><span class="role-badge" style="${m.role === 'owner' ? 'background:rgba(239,68,68,0.15);color:#ef4444;border-color:rgba(239,68,68,0.3)' : m.role === 'admin' ? 'background:rgba(6,182,212,0.15);color:#22d3ee;border-color:rgba(6,182,212,0.3)' : ''}">${escapeHtml(m.role)}</span></td>
             <td>${m.role !== 'owner' ? `<button class="btn btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="removeMember('${m.id}')">Remove</button>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
           </tr>
         `).join('')}
@@ -912,8 +984,8 @@ async function regenerateDSN() {
 
   try {
     const result = await API.post('/api/projects/' + projectId + '/regenerate-dsn');
-    const dsnEl = $('#setting-dsn-value');
-    if (dsnEl) dsnEl.textContent = result.dsn_key;
+    const dsnEl = $('#dsnInput');
+    if (dsnEl) dsnEl.value = window.location.origin + '/ingest/' + result.dsn_key + '/store/';
     showToast('DSN regenerated');
   } catch (err) {
     showToast(err.message || 'Failed to regenerate DSN', 'error');
@@ -921,6 +993,8 @@ async function regenerateDSN() {
 }
 
 async function inviteMember() {
+  // Kept for compatibility; the settings page uses its own sendInvite() wired to
+  // the email input field (C12). This prompt-based fallback still works if called.
   const orgId = AppState.currentOrg?.id;
   if (!orgId) return;
 
@@ -951,7 +1025,7 @@ function renderPendingInvitations(invitations) {
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--card-border)">
       <div>
         <div style="font-size:13px;font-weight:500">${escapeHtml(inv.email)}</div>
-        <div style="font-size:11px;color:var(--text-muted)">${inv.role} · Expires ${formatDate(inv.expires_at)}</div>
+        <div style="font-size:11px;color:var(--text-muted)">${escapeHtml(inv.role)} · Expires ${formatDate(inv.expires_at)}</div>
       </div>
       <button onclick="cancelInvitation('${inv.id}')" style="background:none;border:none;color:var(--error-red);cursor:pointer;font-size:12px">Cancel</button>
     </div>
@@ -983,9 +1057,10 @@ async function removeMember(memberId) {
   }
 }
 
+// The settings page provides a type-to-confirm modal that then calls this (C10)
 async function deleteProject() {
   const projectId = localStorage.getItem('br_project');
-  if (!projectId || !confirm('Are you sure you want to delete this project? This cannot be undone.')) return;
+  if (!projectId) return;
 
   try {
     await API.delete('/api/projects/' + projectId);
@@ -1069,14 +1144,23 @@ function updateSidebarUser() {
     nameEl.forEach(el => el.textContent = AppState.user.name || 'User');
     emailEl.forEach(el => el.textContent = AppState.user.email || '');
     avatarEls.forEach(el => el.textContent = (AppState.user.name || 'U')[0].toUpperCase());
+
+    // Personal greeting in the sidebar subtitle (M6 — replaces "Welcome back, Sarah")
+    const greetingEl = $('#sidebar-greeting');
+    if (greetingEl) {
+      const first = (AppState.user.name || '').split(' ')[0] || 'there';
+      greetingEl.textContent = 'Welcome back, ' + first;
+    }
   }
 }
 
 function highlightActiveNav() {
   const path = location.pathname;
+  // issue-detail belongs to the Issues section (no /issue-detail nav item exists — M5)
+  const navKey = path.includes('issue-detail') ? '/issues' : path;
   $$('.nav-item, .mob-nav-item').forEach(item => {
     const href = item.getAttribute('href');
-    if (href && path.includes(href.replace('.html', ''))) {
+    if (href && navKey.includes(href.replace('.html', ''))) {
       item.classList.add('active');
     } else {
       item.classList.remove('active');
@@ -1100,8 +1184,11 @@ function escapeHtml(str) {
 function toggleMobDrawer() {
   const backdrop = $('#mobDrawerBackdrop');
   const btn = $('#mobHamBtn');
-  if (backdrop) backdrop.classList.toggle('open');
-  if (btn) btn.classList.toggle('open');
+  if (backdrop) {
+    const isOpen = backdrop.classList.toggle('open');
+    if (btn) btn.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
 }
 
 function closeMobDrawerOnBackdrop(e) {

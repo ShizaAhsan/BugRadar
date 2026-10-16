@@ -42,15 +42,27 @@
     }
 
     if (typeof document !== 'undefined') {
-      document.addEventListener('DOMContentLoaded', function () {
+      // Drain queued events immediately when the SDK loads after DOM ready (S2);
+      // only wait for DOMContentLoaded when still parsing.
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          _flushQueue();
+        });
+      } else {
         _flushQueue();
-      });
+      }
     }
 
-    _send({
-      type: 'session_start',
-      timestamp: new Date().toISOString(),
-    });
+    if (typeof window !== 'undefined') {
+      // Flush as the page goes away — that's exactly when errors get captured (S2)
+      window.addEventListener('pagehide', function () { flush(); });
+      window.addEventListener('beforeunload', function () { flush(); });
+    }
+
+    // Session start is local-only (breadcrumb). Sending it as an event created a
+    // junk "Unknown error" issue + quota burn + alert email per page view (S1);
+    // ingestion now rejects payloads with neither message nor exception anyway.
+    addBreadcrumb({ category: 'session', message: 'session_start' });
   }
 
   function captureException(error, extra) {
@@ -239,19 +251,43 @@
 
       var match = line.match(/at\s+(.+?)(?:\s+\((.+)\))?$/);
       if (match) {
-        frame.function = match[1] || '';
+        var target = match[1] || '';
         var inner = match[2] || '';
 
-        var posMatch = inner.match(/:(\d+):(\d+)/);
-        if (posMatch) {
-          frame.filename = inner.substring(0, inner.lastIndexOf(':'));
-          frame.lineno = parseInt(posMatch[1], 10);
-          frame.colno = parseInt(posMatch[2], 10);
+        if (inner) {
+          frame.function = target;
+          var posMatch = inner.match(/:(\d+):(\d+)/);
+          if (posMatch) {
+            frame.filename = inner.substring(0, inner.lastIndexOf(':'));
+            frame.lineno = parseInt(posMatch[1], 10);
+            frame.colno = parseInt(posMatch[2], 10);
+          } else {
+            frame.filename = inner;
+          }
         } else {
-          frame.filename = inner || match[1];
+          // Paren-less frame: "at file:///app.js:10:5" — split the location so
+          // filename/lineno aren't left as one mangled string (S5)
+          var locMatch = target.match(/^(.+):(\d+):(\d+)$/);
+          if (locMatch) {
+            frame.filename = locMatch[1];
+            frame.lineno = parseInt(locMatch[2], 10);
+            frame.colno = parseInt(locMatch[3], 10);
+          } else {
+            frame.function = target;
+            frame.filename = target;
+          }
         }
       } else {
-        frame.filename = line;
+        // Firefox-style frame: "fn@file:///app.js:10:5" (S5)
+        var ffMatch = line.match(/^(.*?)@(.+):(\d+):(\d+)$/);
+        if (ffMatch) {
+          frame.function = ffMatch[1] || '';
+          frame.filename = ffMatch[2];
+          frame.lineno = parseInt(ffMatch[3], 10);
+          frame.colno = parseInt(ffMatch[4], 10);
+        } else {
+          frame.filename = line;
+        }
       }
 
       if (frame.filename && !frame.filename.includes('bugradar')) {
@@ -266,6 +302,10 @@
     return Math.random() < _options.sampleRate;
   }
 
+  function _storeUrl() {
+    return String(_options.dsn).replace(/\/store\/?$/, '') + '/store/';
+  }
+
   function _send(payload) {
     if (!_options.dsn) return;
 
@@ -274,17 +314,16 @@
     if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
       try {
         var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-        var url = _options.dsn.replace(/\/store\/?$/, '') + '/store/';
-        navigator.sendBeacon(url, blob);
-        return;
+        // sendBeacon returns false when the browser refuses (quota/full) — fall
+        // through to fetch instead of silently dropping the event (S2)
+        if (navigator.sendBeacon(_storeUrl(), blob)) return;
       } catch (e) {
         // fallback to fetch
       }
     }
 
     if (typeof fetch !== 'undefined') {
-      var url = _options.dsn.replace(/\/store\/?$/, '') + '/store/';
-      fetch(url, {
+      fetch(_storeUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -300,6 +339,11 @@
       var item = _queue.shift();
       _send(item);
     }
+  }
+
+  // Public flush — drains any events still waiting in the local queue (S2)
+  function flush() {
+    _flushQueue();
   }
 
   function mergeOptions(target) {
@@ -325,5 +369,6 @@
     setTag: setTag,
     setTags: setTags,
     addBreadcrumb: addBreadcrumb,
+    flush: flush,
   };
 }));

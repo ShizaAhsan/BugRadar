@@ -1,16 +1,21 @@
 #!/usr/bin/env node
 /**
  * BugRadar Ingestion Test Script
- * Sends test error events to the local BugRadar server
+ * Sends test error events to the BugRadar server and ASSERTS the responses.
  *
  * Usage: node test-ingestion.js [DSN_KEY] [BASE_URL]
+ *    or: DSN_KEY=abc BASE_URL=https://host npm run test:ingestion
  * Example: node test-ingestion.js abc123 http://localhost:3000
+ *
+ * Exits 0 only when every event is accepted (2xx); any 4xx/5xx (e.g. a wrong
+ * or missing DSN key) fails the run (QA-BUG-REPORT.md D5).
  */
 
 const http = require('http');
+const https = require('https');
 
-const dsnKey = process.argv[2] || 'test-dsn-key';
-const baseUrl = process.argv[3] || 'http://localhost:3000';
+const dsnKey = process.argv[2] || process.env.DSN_KEY || 'test-dsn-key';
+const baseUrl = (process.argv[3] || process.env.BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
 const url = `${baseUrl}/ingest/${dsnKey}/store/`;
 
 const testEvents = [
@@ -79,15 +84,18 @@ const testEvents = [
 ];
 
 let sent = 0;
+let failures = 0;
 const total = testEvents.length;
 
 function sendEvent(event, index) {
   const data = JSON.stringify(event);
   const parsedUrl = new URL(url);
+  const isHttps = parsedUrl.protocol === 'https:';
+  const lib = isHttps ? https : http;
 
   const options = {
     hostname: parsedUrl.hostname,
-    port: parsedUrl.port || 80,
+    port: parsedUrl.port || (isHttps ? 443 : 80),
     path: parsedUrl.pathname,
     method: 'POST',
     headers: {
@@ -96,14 +104,24 @@ function sendEvent(event, index) {
     },
   };
 
-  const req = http.request(options, (res) => {
+  const req = lib.request(options, (res) => {
     let body = '';
     res.on('data', (chunk) => body += chunk);
     res.on('end', () => {
       sent++;
-      console.log(`[${sent}/${total}] Status: ${res.status || res.statusCode} — ${event.message.slice(0, 50)}...`);
+      const status = res.statusCode || 0;
+      const ok = status >= 200 && status < 300;
+      if (!ok) failures++;
+      console.log(`[${sent}/${total}] Status: ${status} ${ok ? 'OK' : 'FAIL'} — ${event.message.slice(0, 50)}...`);
+      if (!ok) {
+        console.log(`         ${body.slice(0, 200)}`);
+      }
       if (sent === total) {
-        console.log(`\n✓ All ${total} events sent to ${url}`);
+        if (failures > 0) {
+          console.error(`\n✗ ${failures}/${total} events rejected by ${url} — check the DSN key and that the server is running`);
+          process.exit(1);
+        }
+        console.log(`\n✓ All ${total} events accepted (2xx) by ${url}`);
         process.exit(0);
       }
     });
@@ -111,6 +129,7 @@ function sendEvent(event, index) {
 
   req.on('error', (err) => {
     sent++;
+    failures++;
     console.error(`[${sent}/${total}] Error: ${err.message}`);
     if (sent === total) process.exit(1);
   });

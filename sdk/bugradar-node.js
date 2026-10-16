@@ -18,6 +18,11 @@ class BugRadar {
     this.userContext = options.userContext || {};
     this.breadcrumbs = [];
     this._installed = false;
+    this._pendingSends = 0;
+    // A Node process that hit an uncaughtException is in an unknown state —
+    // capture it, flush, then exit so the supervisor (pm2/systemd) can restart
+    // a clean one (S4). Set exitOnUncaught:false to keep the old behavior.
+    this.exitOnUncaught = options.exitOnUncaught !== false;
   }
 
   install() {
@@ -25,7 +30,10 @@ class BugRadar {
     this._installed = true;
 
     process.on('uncaughtException', (error) => {
-      this.captureException(error);
+      this.captureException(error, { uncaughtException: true });
+      if (this.exitOnUncaught) {
+        this._exitAfterFlush();
+      }
     });
 
     process.on('unhandledRejection', (reason) => {
@@ -42,7 +50,7 @@ class BugRadar {
   captureException(error, extra = {}) {
     if (!this._shouldSample()) return;
 
-    const payload = {
+    let payload = {
       message: error.message || String(error),
       level: 'error',
       timestamp: new Date().toISOString(),
@@ -61,9 +69,12 @@ class BugRadar {
       extra,
     };
 
+    // Honour beforeSend — it's the PII-redaction hook (S3); dropping it made
+    // the option a silent no-op.
     if (this.beforeSend) {
       const result = this.beforeSend(payload);
       if (!result) return;
+      payload = result;
     }
 
     this._send(payload);
@@ -72,7 +83,7 @@ class BugRadar {
   captureMessage(message, level = 'info') {
     if (!this._shouldSample()) return;
 
-    this._send({
+    let payload = {
       message,
       level,
       timestamp: new Date().toISOString(),
@@ -81,7 +92,16 @@ class BugRadar {
       environment: this.environment,
       release: this.release,
       breadcrumbs: this.breadcrumbs.slice(),
-    });
+    };
+
+    // captureMessage must run the same redaction hook as captureException (S3)
+    if (this.beforeSend) {
+      const result = this.beforeSend(payload);
+      if (!result) return;
+      payload = result;
+    }
+
+    this._send(payload);
   }
 
   setUser(user) {
@@ -208,13 +228,30 @@ class BugRadar {
       };
 
       const inner = match[2] || '';
-      const posMatch = inner.match(/:(\d+):(\d+)/);
-      if (posMatch) {
-        frame.filename = inner.substring(0, inner.lastIndexOf(':'));
-        frame.lineno = parseInt(posMatch[1], 10);
-        frame.colno = parseInt(posMatch[2], 10);
+      const target = match[1] || '';
+
+      if (inner) {
+        frame.function = target;
+        const posMatch = inner.match(/:(\d+):(\d+)/);
+        if (posMatch) {
+          frame.filename = inner.substring(0, inner.lastIndexOf(':'));
+          frame.lineno = parseInt(posMatch[1], 10);
+          frame.colno = parseInt(posMatch[2], 10);
+        } else {
+          frame.filename = inner;
+        }
       } else {
-        frame.filename = inner || match[1];
+        // Paren-less frame ("at /app/lib/db.js:42:11") — split the location so
+        // filename/lineno aren't one mangled string (S5)
+        const locMatch = target.match(/^(.+):(\d+):(\d+)$/);
+        if (locMatch) {
+          frame.filename = locMatch[1];
+          frame.lineno = parseInt(locMatch[2], 10);
+          frame.colno = parseInt(locMatch[3], 10);
+        } else {
+          frame.function = target;
+          frame.filename = target;
+        }
       }
 
       if (frame.filename && !frame.filename.includes('bugradar')) {
@@ -229,8 +266,27 @@ class BugRadar {
     return Math.random() < this.sampleRate;
   }
 
+  // Give in-flight capture requests a moment to flush, then terminate with a
+  // non-zero exit code (S4). Hard deadline so a hung socket can't pin a
+  // corrupted process open forever.
+  _exitAfterFlush() {
+    const deadline = Date.now() + 1000;
+    const tryExit = () => {
+      if (this._pendingSends <= 0 || Date.now() > deadline) {
+        process.exit(1);
+      }
+      setTimeout(tryExit, 50);
+    };
+    setTimeout(tryExit, 50);
+  }
+
   _send(payload) {
     payload.sdk = { name: 'bugradar-node', version: '1.0.0' };
+
+    this._pendingSends += 1;
+    const done = () => {
+      this._pendingSends = Math.max(0, this._pendingSends - 1);
+    };
 
     try {
       const url = new URL(this.dsn.replace(/\/store\/?$/, '') + '/store/');
@@ -245,11 +301,16 @@ class BugRadar {
         },
       });
 
-      req.on('error', () => {});
+      req.on('error', done);
+      req.on('response', (res) => {
+        res.resume();
+        done();
+      });
       req.write(data);
       req.end();
     } catch (e) {
       // Silently fail
+      done();
     }
   }
 }

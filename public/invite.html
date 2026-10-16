@@ -34,12 +34,6 @@
       <p style="color: #a1a1aa; margin-bottom: 24px;">Log in to accept this invitation</p>
       <a href="/login.html" class="btn">Log In to Accept</a>
     </div>
-    <div id="accept-state" style="display: none;">
-      <h2 style="font-size: 20px; margin-bottom: 8px;">Join Organization</h2>
-      <p style="color: #a1a1aa; margin-bottom: 24px;" id="invite-message">Accept this invitation to join the team</p>
-      <button class="btn" id="accept-btn" onclick="acceptInvitation()">Accept Invitation</button>
-      <a href="/dashboard.html" class="btn btn-outline">Maybe Later</a>
-    </div>
     <div id="success-state" style="display: none;">
       <h2 style="font-size: 20px; margin-bottom: 8px; color: #10b981;">Welcome!</h2>
       <p style="color: #a1a1aa; margin-bottom: 24px;">You've been added to the organization</p>
@@ -56,28 +50,21 @@
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
 
-    if (!token) {
-      showError('No invitation token provided');
-    } else {
-      const storedToken = localStorage.getItem('br_token');
-      if (storedToken) {
-        acceptInvitation();
-      } else {
-        document.getElementById('loading-state').style.display = 'none';
-        document.getElementById('login-state').style.display = 'block';
-        localStorage.setItem('br_invite_token', token);
-      }
-    }
-
     async function acceptInvitation() {
       try {
         document.getElementById('loading-state').style.display = 'block';
         document.getElementById('login-state').style.display = 'none';
-        document.getElementById('accept-state').style.display = 'none';
+        document.getElementById('error-state').style.display = 'none';
 
+        // httpOnly cookie is the primary credential (C13); a Bearer token is only
+        // an optional fallback when one exists in localStorage (M2 keeps it fresh)
+        const headers = { 'Accept': 'application/json' };
         const storedToken = localStorage.getItem('br_token');
+        if (storedToken) headers['Authorization'] = 'Bearer ' + storedToken;
+
         const res = await fetch('/api/invitations/accept/' + token, {
-          headers: { 'Authorization': 'Bearer ' + storedToken }
+          headers,
+          credentials: 'include',
         });
 
         if (res.redirected) {
@@ -85,22 +72,36 @@
           return;
         }
 
-        const data = await res.json();
-        if (res.ok) {
+        const data = await res.json().catch(() => null);
+
+        if (res.ok && data && data.success) {
+          localStorage.removeItem('br_invite_token');
           document.getElementById('loading-state').style.display = 'none';
           document.getElementById('success-state').style.display = 'block';
+        } else if ((data && data.code === 'LOGIN_REQUIRED') || res.status === 401) {
+          // Not signed in yet — remember the invite; app.js resumes it after login
+          localStorage.setItem('br_invite_token', token);
+          document.getElementById('loading-state').style.display = 'none';
+          document.getElementById('login-state').style.display = 'block';
         } else {
-          showError(data.error || 'Failed to accept invitation');
+          showError((data && data.error) || 'Failed to accept invitation');
         }
       } catch (err) {
         showError('Failed to accept invitation');
       }
     }
 
+    if (!token) {
+      showError('No invitation token provided');
+    } else {
+      acceptInvitation();
+    }
+
     function showError(msg) {
+      // Terminal failure (expired/invalid) — don't loop back here after next login
+      localStorage.removeItem('br_invite_token');
       document.getElementById('loading-state').style.display = 'none';
       document.getElementById('login-state').style.display = 'none';
-      document.getElementById('accept-state').style.display = 'none';
       document.getElementById('error-state').style.display = 'block';
       document.getElementById('error-message').textContent = msg;
     }

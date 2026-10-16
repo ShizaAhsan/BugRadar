@@ -1399,7 +1399,7 @@
                         <div class="mob-user-name">Shiza Ahsan</div>
                         <div class="mob-user-email">admin@bugradar.io</div>
                     </div>
-                    <a href="login.html" class="mob-signout" title="Sign Out">
+                    <a href="#" class="mob-signout" title="Sign Out" onclick="handleLogout(); return false;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                             <polyline points="16 17 21 12 16 7"></polyline>
@@ -1596,189 +1596,12 @@
                             <th style="width: 14%;">Last Seen</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!-- 1. Critical TypeError -->
-                        <tr class="severity-critical unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-react">React</span>
-                                </div>
-                                <span class="error-title">TypeError: Cannot read properties of undefined (reading 'map')</span>
-                                <span class="error-loc">src/components/Dashboard.tsx:84</span>
-                            </td>
-                            <td><span class="severity-pill critical">Critical</span></td>
-                            <td><span class="count-val">1,204</span></td>
-                            <td><span class="count-val">342</span></td>
-                            <td><span class="time-val" data-time="2">2 mins ago</span></td>
-                        </tr>
-
-                        <!-- 2. High ReferenceError -->
-                        <tr class="severity-high unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-next">Next.js</span>
-                                </div>
-                                <span class="error-title">ReferenceError: window is not defined</span>
-                                <span class="error-loc">utils/analytics.js:12</span>
-                            </td>
-                            <td><span class="severity-pill high">High</span></td>
-                            <td><span class="count-val">855</span></td>
-                            <td><span class="count-val">129</span></td>
-                            <td><span class="time-val" data-time="14">14 mins ago</span></td>
-                        </tr>
-
-                        <!-- 3. Medium AxiosError -->
-                        <tr class="severity-medium unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-api">API</span>
-                                </div>
-                                <span class="error-title">AxiosError: Request failed with status code 500</span>
-                                <span class="error-loc">api/userController.ts:201</span>
-                            </td>
-                            <td><span class="severity-pill medium">Medium</span></td>
-                            <td><span class="count-val">102</span></td>
-                            <td><span class="count-val">12</span></td>
-                            <td><span class="time-val" data-time="60">1 hour ago</span></td>
-                        </tr>
-
-                        <!-- 4. Low OutOfMemory -->
-                        <tr class="severity-low unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-backend">Backend</span>
-                                </div>
-                                <span class="error-title">OutOfMemoryError: Java heap space</span>
-                                <span class="error-loc">com.bugradar.services.DataProcessor:405</span>
-                            </td>
-                            <td><span class="severity-pill low">Low</span></td>
-                            <td><span class="count-val">42</span></td>
-                            <td><span class="count-val">1</span></td>
-                            <td><span class="time-val" data-time="180">3 hours ago</span></td>
-                        </tr>
-
-                        <!-- 5. Critical Database Timeout -->
-                        <tr class="severity-critical unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-go">Go</span>
-                                </div>
-                                <span class="error-title">DatabaseConnectionTimeout: pq: canceling statement due to user request</span>
-                                <span class="error-loc">database/postgres_pool.go:142</span>
-                            </td>
-                            <td><span class="severity-pill critical">Critical</span></td>
-                            <td><span class="count-val">2,419</span></td>
-                            <td><span class="count-val">680</span></td>
-                            <td><span class="time-val" data-time="4">4 mins ago</span></td>
-                        </tr>
-
-                        <!-- 6. High JWT Expired -->
-                        <tr class="severity-high unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-auth">Auth</span>
-                                </div>
-                                <span class="error-title">TokenExpiredError: jwt expired signature verification failed</span>
-                                <span class="error-loc">middleware/authenticate.ts:38</span>
-                            </td>
-                            <td><span class="severity-pill high">High</span></td>
-                            <td><span class="count-val">614</span></td>
-                            <td><span class="count-val">95</span></td>
-                            <td><span class="time-val" data-time="30">30 mins ago</span></td>
-                        </tr>
-
-                        <!-- 7. Medium React Render Warning -->
-                        <tr class="severity-medium unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-react">React</span>
-                                </div>
-                                <span class="error-title">Error: Maximum update depth exceeded in useEffect hook</span>
-                                <span class="error-loc">src/hooks/useDataFetch.ts:55</span>
-                            </td>
-                            <td><span class="severity-pill medium">Medium</span></td>
-                            <td><span class="count-val">78</span></td>
-                            <td><span class="count-val">19</span></td>
-                            <td><span class="time-val" data-time="240">4 hours ago</span></td>
-                        </tr>
-
-                        <!-- 8. Low Redis Cache Miss Rate -->
-                        <tr class="severity-low unresolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-backend">Backend</span>
-                                </div>
-                                <span class="error-title">RedisKeyNotFound: Cache key session_telemetry_idx missing</span>
-                                <span class="error-loc">cache/redisCluster.go:88</span>
-                            </td>
-                            <td><span class="severity-pill low">Low</span></td>
-                            <td><span class="count-val">33</span></td>
-                            <td><span class="count-val">6</span></td>
-                            <td><span class="time-val" data-time="480">8 hours ago</span></td>
-                        </tr>
-
-                        <!-- 9. Resolved Network Handler -->
-                        <tr class="severity-resolved resolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-react">React</span>
-                                </div>
-                                <span class="error-title" style="text-decoration:line-through; opacity:0.65; color:var(--text-muted);">UnhandledPromiseRejection: Network error in authHandler</span>
-                                <span class="error-loc">src/auth/authService.ts:52</span>
-                            </td>
-                            <td><span class="severity-pill resolved">Resolved</span></td>
-                            <td><span class="count-val">1,890</span></td>
-                            <td><span class="count-val">520</span></td>
-                            <td><span class="time-val" data-time="1440">Yesterday</span></td>
-                        </tr>
-
-                        <!-- 10. Resolved Syntax Error -->
-                        <tr class="severity-resolved resolved" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-api">API</span>
-                                </div>
-                                <span class="error-title" style="text-decoration:line-through; opacity:0.65; color:var(--text-muted);">SyntaxError: Unexpected token '<' in JSON at position 0</span>
-                                <span class="error-loc">api/parsePayload.ts:19</span>
-                            </td>
-                            <td><span class="severity-pill resolved">Resolved</span></td>
-                            <td><span class="count-val">422</span></td>
-                            <td><span class="count-val">84</span></td>
-                            <td><span class="time-val" data-time="2880">2 days ago</span></td>
-                        </tr>
-
-                        <!-- 11. Ignored Python Deprecation -->
-                        <tr class="severity-ignored ignored" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-python">Python</span>
-                                </div>
-                                <span class="error-title" style="opacity:0.65; color:var(--text-muted);">DeprecationWarning: distutils Version classes are deprecated</span>
-                                <span class="error-loc">venv/lib/python3.10/site-packages/pkg_resources.py:28</span>
-                            </td>
-                            <td><span class="severity-pill ignored">Ignored</span></td>
-                            <td><span class="count-val">128</span></td>
-                            <td><span class="count-val">12</span></td>
-                            <td><span class="time-val" data-time="4320">3 days ago</span></td>
-                        </tr>
-
-                        <!-- 12. Ignored Experimental Warning -->
-                        <tr class="severity-ignored ignored" onclick="window.location.href='issue-detail.html?from=issues'">
-                            <td>
-                                <div class="tag-group">
-                                    <span class="tag tag-next">Next.js</span>
-                                </div>
-                                <span class="error-title" style="opacity:0.65; color:var(--text-muted);">Warning: Using experimental feature serverActions in Next.js config</span>
-                                <span class="error-loc">next.config.js:8</span>
-                            </td>
-                            <td><span class="severity-pill ignored">Ignored</span></td>
-                            <td><span class="count-val">540</span></td>
-                            <td><span class="count-val">60</span></td>
-                            <td><span class="time-val" data-time="7200">5 days ago</span></td>
-                        </tr>
+                    <tbody id="issues-table-body">
+                        <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted)">Loading issues...</td></tr>
                     </tbody>
                 </table>
             </div>
+            <div id="issues-pagination" style="display:flex;justify-content:center;align-items:center;gap:12px;padding:14px;border-top:1px solid var(--card-border);"></div>
         </div>
 
     </main>
@@ -1812,11 +1635,12 @@
             }
         });
 
-        // ── CUSTOM WEB DROPDOWN CONTROLLER ──
+        // ── CUSTOM WEB DROPDOWN CONTROLLER (wired to the API — C3/M10) ──
         let currentStatusFilter = 'all';
+        let currentSeverityFilter = '';
         let currentSortBy = 'time';
+        let currentSince = '24h';
         const searchInput = document.getElementById('searchInput');
-        const tbody = document.querySelector('#issuesTable tbody');
 
         function toggleDropdown(id) {
             const dropdown = document.getElementById(id);
@@ -1842,12 +1666,32 @@
             dropdown.classList.remove('open');
 
             if (dropdownId === 'statusDropdown') {
-                currentStatusFilter = value;
+                // The menu mixes status and severity options — route each to its own
+                // API parameter instead of overloading `status` (M10)
+                if (['critical', 'high', 'medium', 'low'].includes(value)) {
+                    currentSeverityFilter = value;
+                    currentStatusFilter = 'all';
+                } else {
+                    currentStatusFilter = value;
+                    currentSeverityFilter = '';
+                }
             } else if (dropdownId === 'sortDropdown') {
                 currentSortBy = value;
+            } else if (dropdownId === 'timeDropdown') {
+                currentSince = value;
             }
 
-            updateTable();
+            applyIssuesFilters();
+        }
+
+        function applyIssuesFilters() {
+            // Push UI state into the app.js issues loader and refetch from the API
+            issuesCurrentPage = 1;
+            issuesCurrentStatus = (currentStatusFilter && currentStatusFilter !== 'all') ? currentStatusFilter : '';
+            issuesCurrentSeverity = currentSeverityFilter || '';
+            issuesCurrentSort = currentSortBy;
+            issuesCurrentSince = currentSince;
+            loadIssues();
         }
 
         // Close dropdowns on outside click
@@ -1857,57 +1701,16 @@
             }
         });
 
-        function updateTable() {
-            const status = currentStatusFilter;
-            const sort = currentSortBy;
-            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-
-            rows.forEach(row => {
-                let matchesStatus = true;
-                if (status === 'unresolved') {
-                    matchesStatus = row.classList.contains('unresolved');
-                } else if (status === 'resolved') {
-                    matchesStatus = row.classList.contains('resolved');
-                } else if (status === 'ignored') {
-                    matchesStatus = row.classList.contains('ignored');
-                } else if (status === 'critical') {
-                    matchesStatus = row.classList.contains('severity-critical');
-                } else if (status === 'high') {
-                    matchesStatus = row.classList.contains('severity-high');
-                }
-
-                const text = row.innerText.toLowerCase();
-                const matchesSearch = !search || text.includes(search);
-
-                row.style.display = (matchesStatus && matchesSearch) ? '' : 'none';
+        // Debounced server-side search (issuesSearch lives in app.js)
+        if (searchInput) {
+            let searchTimer = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () {
+                    issuesSearch(searchInput.value.trim());
+                }, 300);
             });
-
-            // Sorting logic
-            if (sort === 'events') {
-                rows.sort((a, b) => {
-                    const countA = parseInt(a.children[2].innerText.replace(/,/g, '')) || 0;
-                    const countB = parseInt(b.children[2].innerText.replace(/,/g, '')) || 0;
-                    return countB - countA;
-                });
-            } else if (sort === 'users') {
-                rows.sort((a, b) => {
-                    const usersA = parseInt(a.children[3].innerText.replace(/,/g, '')) || 0;
-                    const usersB = parseInt(b.children[3].innerText.replace(/,/g, '')) || 0;
-                    return usersB - usersA;
-                });
-            } else if (sort === 'time') {
-                rows.sort((a, b) => {
-                    const timeA = parseInt(a.querySelector('.time-val')?.dataset.time) || 0;
-                    const timeB = parseInt(b.querySelector('.time-val')?.dataset.time) || 0;
-                    return timeA - timeB;
-                });
-            }
-
-            rows.forEach(row => tbody.appendChild(row));
         }
-
-        if (searchInput) searchInput.addEventListener('input', updateTable);
     </script>
 
     <!-- COLOR SCHEME GUIDE MODAL -->

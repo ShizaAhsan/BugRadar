@@ -70,14 +70,22 @@ const CLEANUP_INTERVAL = 60 * 60 * 1000;
 async function startRetentionWorker() {
   console.log('[Worker] Event retention worker started');
 
-  // Run immediately on start
-  await cleanupOldEvents();
-  await reconcileEventCounts();
-
-  // Schedule periodic runs
-  setInterval(async () => {
+  // Run immediately on start — failures must not prevent scheduling (QA-BUG-REPORT.md B4)
+  try {
     await cleanupOldEvents();
     await reconcileEventCounts();
+  } catch (err) {
+    console.error('[Worker] Initial retention run failed (will still retry hourly):', err.message);
+  }
+
+  // Schedule periodic runs — a transient DB error must never crash the process
+  setInterval(async () => {
+    try {
+      await cleanupOldEvents();
+      await reconcileEventCounts();
+    } catch (err) {
+      console.error('[Worker] Scheduled retention run failed:', err.message);
+    }
   }, CLEANUP_INTERVAL);
 }
 
